@@ -9,7 +9,8 @@ intelligence/troubleshooting (100), UX (50), stability & operational security (5
 | Area | Read first |
 |---|---|
 | Anything architectural | `docs/ARCHITECTURE.md`, `docs/DECISIONS.md` |
-| Liara API calls | `docs/liara/capabilities.md` (base URLs per service), then grep `docs/vendor/liara/*.yaml` and `docs/vendor/liara-cli/src/` |
+| Liara API calls | `docs/liara/capabilities.md` (base URLs per service), then grep `docs/vendor/liara/pages/*.md` and `docs/vendor/liara-cli/src/` |
+| Liara endpoints not in the spec / deploy sequence | `docs/liara/api-findings.md` (CLI-derived, file:line cited) |
 | Deploy flow / platforms / liara.json | `docs/liara/app-creation-flow.md`, `docs/liara/platform-node.md`, `docs/vendor/liara-cli/src/commands/deploy.ts` |
 | Domains / DNS / SSL | `docs/liara/domains.md` |
 | Plan recommendation / costs | `docs/liara/plans.md` |
@@ -29,7 +30,7 @@ intelligence/troubleshooting (100), UX (50), stability & operational security (5
    All side effects go through `core` tools and workflows.
 2. **Risk tiers are enforced in code** (`core/policy`), not in prompts. Tier ≥ 2 requires an approval token that is
    bound to (tool, args-hash), single-use, and expiring. Never add a bypass flag.
-3. **Liara API truth:** only call endpoints found in `docs/vendor/liara/*.yaml` or in the official CLI source
+3. **Liara API truth:** only call endpoints found in `docs/vendor/liara/pages/*.md` or in the official CLI source
    `docs/vendor/liara-cli/src/` (cite the CLI file in a comment). Never invent an endpoint, body, or plan ID.
    If neither source has it, add it to `docs/liara/capabilities.md` and make the product tell the user plainly.
 4. **Secrets:** never log, return, or send the Liara token or BoxAPI key to an LLM. Redact logs before any LLM call.
@@ -53,3 +54,4 @@ intelligence/troubleshooting (100), UX (50), stability & operational security (5
 ## Commands
 - `pnpm install` · `pnpm dev` · `pnpm test` · `pnpm lint` · `pnpm typecheck`
 - Local DB: `docker compose -p miara up -d db` (Postgres on host port **5433**)
+- Liara CLI source (gitignored): `bash scripts/vendor-liara-cli.sh` clones it at the pinned commit into `docs/vendor/liara-cli`

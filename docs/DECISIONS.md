@@ -15,7 +15,7 @@
 | D11 | Single-tenant secrets in env; never in LLM context or logs; redact before LLM | Agreed |
 | D12 | Demo is a story told from the user's point of view (see `docs/DEMO.md`), not a feature tour | Agreed |
 | D13 | Agent loop = **router → workflow → narrator** (see ARCHITECTURE "LLM layer"). Quick-action chips work even if the LLM fails. | New |
-| D14 | Plan recommendation uses the static table in `docs/liara/plans.md` (prices labelled with their capture date); API plan IDs come only from the API (CLI `plan list` source) | New |
+| D14 | Live plan IDs and prices come from `GET v1/me` (`plans.projects`, `projectBundlePlans`; CLI `plan list` source). The static table in `docs/liara/plans.md` is a fallback only (offline, or the API fails), and its prices are labelled with their capture date | Revised |
 | D16 | Official Liara CLI source (`liara-cloud/cli`, MIT) is vendored read-only as the 2nd source of API truth (networks, plan list, deploy sequence aren't in the API docs). Miara calls the HTTP API itself; shelling out to the CLI is plan B only if the deploy upload can't be reproduced | Proposed |
 | D17 | Domain setup recommends Liara DNS (user changes only nameservers at the registrar); keeping the current DNS provider is the alternative | Proposed |
 | D15 | The `*.liara.run` address lives only 7 days from first deploy → Miara warns the user and pushes domain setup as a guided step | New |

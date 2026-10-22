@@ -1,4 +1,21 @@
-# Liara PaaS plans (captured from the console 2026-10-22, may be outdated)
+# Liara PaaS plans
+
+**Live data first.** Plan IDs, resources, and prices come from `GET v1/me` → `plans.projects` (keys = planID) and
+`plans.projectBundlePlans[planID]` (keys = bundlePlanID, `displayPrice`), as the CLI does in
+`docs/vendor/liara-cli/src/commands/plan/list.ts:21-45`. Details are in `docs/liara/api-findings.md` §3.
+The tables below are a **fallback only**, for when the API is unreachable, and the product must show their capture date.
+
+Bundle (feature plan) ID mapping. **Verify in Spike B.**
+| Console (fa) | CLI label | `bundlePlanID` |
+|---|---|---|
+| رایگان | Free | `free` |
+| پایه | Bronze | `basic` |
+| نقره‌ای | Silver | `standard` |
+| طلایی | Gold | `pro` |
+Source: `docs/vendor/liara-cli/src/utils/set-bundle-plan-names.ts`. `enterprise` also exists (`errors/bundle-plan.ts:36`).
+`planID: free` requires `bundlePlanID: free`.
+
+## Fallback table (captured from the console 2026-10-22, may be outdated)
 
 All plans are located in Iran, with unlimited (fair-use) traffic. Prices are in **toman, excluding 10% VAT**. Billing is hourly.
 The displayed price = plan resources + feature bundle (e.g. Mars plan 825,000 + gold bundle 1,475,000 = 2,300,000/month;
@@ -25,8 +42,9 @@ Monthly / hourly price by bundle:
 | Neptune | 12,600,000 / 17,499 | 16,000,000 / 22,222 | 22,000,000 / 30,555 |
 | Pluto | 22,000,000 / 30,555 | 28,000,000 / 38,888 | 38,600,000 / 53,610 |
 
-TODO (developer will supply): what each bundle includes (e.g. zero-downtime, backups, log retention), the DBaaS plans,
-and the API plan/bundle ID strings (look them up in the PaaS pages in `docs/vendor/liara/pages/` first).
+TODO (developer will supply): what each bundle includes (e.g. zero-downtime, backups; known so far: log retention and
+source-size/deploy limits per `api-findings.md`), and the DBaaS plans. Bundle IDs are in the mapping above. PaaS plan IDs
+(e.g. `free`, `*g2*` keys) come only from `GET v1/me`, so never hard-code them.
 
 Recommendation heuristic (state the reason to the user):
 - Static/small Node or demo → Earth or Mars, base bundle.

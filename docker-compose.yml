@@ -1,0 +1,23 @@
+# Local development only. Production uses Liara DBaaS (docs/DECISIONS.md D8).
+name: miara
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      # Dev-only credentials; must match DATABASE_URL in .env.example.
+      POSTGRES_USER: miara
+      POSTGRES_PASSWORD: miara
+      POSTGRES_DB: miara
+    ports:
+      - '5433:5432'
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U miara -d miara']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  db-data:

@@ -1,0 +1,7 @@
+pnpm-lock.yaml
+docs/vendor/
+**/node_modules/
+**/dist/
+**/.next/
+coverage/
+*.md

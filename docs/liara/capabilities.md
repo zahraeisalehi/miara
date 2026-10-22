@@ -4,6 +4,7 @@ Sources of truth, in order:
 1. `docs/vendor/liara/pages/*.md` (one page per endpoint, each embeds its OpenAPI YAML; file names mirror the URL, e.g. `pass_apps_get-logs-of-app.md`; index: `docs/vendor/liara/llms.txt`)
 2. The official CLI source at `docs/vendor/liara-cli/src/` (MIT, github.com/liara-cloud/cli). Use it for endpoints
    the specs don't document. Every client method built from the CLI must cite the CLI file in a comment.
+What the CLI source shows for networks, the deploy sequence, plans, and build logs, with file:line citations: `docs/liara/api-findings.md`.
 Update this file whenever a spike confirms or disproves something.
 
 ## Base URLs and auth
