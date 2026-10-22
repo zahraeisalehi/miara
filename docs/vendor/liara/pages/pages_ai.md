@@ -1,0 +1,205 @@
+> ## Documentation Index
+> Fetch the complete documentation index at: https://developers.liara.ir/llms.txt
+> Use this file to discover all available pages before exploring further.
+
+# Ai
+
+***
+
+title: AI API
+description: AI platform API for chat completions, image generation, embeddings, audio transcriptions, text-to-speech, and workspace management
+-----------------------------------------------------------------------------------------------------------------------------------------------
+
+# AI API
+
+Liara's AI platform provides OpenAI-compatible endpoints for AI inference, including chat completions, image generation, embeddings, audio transcriptions, and text-to-speech. Manage your AI resources through workspaces, API keys, and a comprehensive model catalog.
+
+## Overview
+
+The AI API enables you to:
+
+\* **Chat Completions** - Generate text responses using state-of-the-art language models with streaming support
+\* **Image Generation** - Create and edit images from text prompts using supported image generation models
+\* **Embeddings** - Generate vector embeddings for text search, clustering, and semantic analysis
+\* **Audio Transcriptions** - Convert audio files into text using supported speech-to-text models
+\* **Text to Speech** - Convert text into speech audio using supported AI models
+\* **Workspaces** - Organize AI resources with plan-based billing and provider preferences
+\* **API Keys** - Manage authentication keys scoped to specific workspaces
+\* **Model Catalog** - Browse and filter available AI models by provider, modality, and pricing
+\* **Logs** - Track inference requests, usage, and costs per workspace
+\* **Playground** - Test AI inference interactively with JWT authentication
+
+## Key Features
+
+### OpenAI-Compatible
+
+All inference endpoints follow the OpenAI API format, making it easy to integrate with existing SDKs and tools. Simply point your OpenAI client to the Liara AI base URL with your workspace-specific path.
+
+### Multi-Provider Support
+
+Access models from multiple providers through a single API.
+
+### Provider Preferences
+
+Control how requests are routed to providers:
+
+\* **Price** - Route to the lowest-cost provider
+\* **Throughput** - Route to the highest-throughput provider
+\* **Latency** - Route to the lowest-latency provider
+
+### Streaming
+
+Chat completions support Server-Sent Events (SSE) streaming for real-time token delivery, ideal for chat interfaces and interactive applications.
+
+### Multi-Modal Input
+
+Supported inference endpoints can work with different input modalities, including text, images, files, and audio, depending on the selected model and endpoint.
+
+### Audio Processing
+
+The AI API supports both speech-to-text and text-to-speech capabilities.
+
+**Audio Transcriptions** accepts audio through either:
+
+\* `multipart/form-data` using the `file` field
+\* `application/json` using the `input_audio` field with Base64-encoded audio data
+
+Supported audio formats include WAV, MP3, FLAC, M4A, OGG, WebM, and AAC.
+
+**Text to Speech** generates audio directly from text using supported text-to-speech models.
+
+### Workspace Isolation
+
+Each workspace provides isolated billing, API keys, and usage tracking. Workspaces can be on different plans with varying features and limits.
+
+## Base URL
+
+For inference endpoints such as chat completions, embeddings, image generation, audio transcriptions, and text-to-speech:
+
+```text theme={null}
+https://ai.liara.ir/api/{workspaceID}/v1
+```
+
+For management endpoints such as workspaces, keys, logs, playground, and models catalog:
+
+```text theme={null}
+https://ai.liara.ir
+```
+
+## Authentication
+
+The AI API uses two authentication methods.
+
+### API Key Authentication
+
+Inference endpoints use an AI API key:
+
+```text theme={null}
+Authorization: Bearer <your-ai-api-key>
+```
+
+API keys are created through the management API and are scoped to specific workspaces.
+
+API key authentication is used for inference endpoints including:
+
+\* Chat completions
+\* Embeddings
+\* Image generation
+\* Audio transcriptions
+\* Text to speech
+
+### JWT Authentication
+
+Management endpoints use your Liara account JWT:
+
+```text theme={null}
+Authorization: Bearer <your-jwt-token>
+```
+
+JWT authentication is used for management functionality such as:
+
+\* Workspaces
+\* API keys
+\* Logs
+\* Playground
+\* Model catalog
+
+## Workspace Plans
+
+| Plan | Features | Log Retention |
+| - | - | - |
+| Base | Free tier, limited models, basic activity filters | 7 days |
+| Standard | More models, monthly activity filter | 30 days |
+| Pro | All models, all activity filters, full access | 90 days |
+
+## Common Operations
+
+### Making a Chat Completion
+
+When calling the chat completion endpoint, specify:
+
+\* **workspaceID**: Your workspace ID in the URL path
+\* **model**: The model ID
+\* **messages**: Array of conversation messages with `role` and `content`
+\* **stream**: Set to `true` for SSE streaming
+
+### Transcribing Audio
+
+The audio transcription endpoint supports both JSON and multipart/form-data requests.
+
+For JSON requests, provide the audio as Base64-encoded data:
+
+```json theme={null}
+{
+  "model": "your-stt-model",
+  "input_audio": {
+    "data": "<base64-encoded-audio>",
+    "format": "wav"
+  }
+}
+```
+
+For multipart/form-data requests, upload the audio using the `file` field:
+
+```text theme={null}
+file=<audio-file>
+model=<stt-model>
+```
+
+Additional transcription options such as language, response format, temperature, and timestamp granularities can be provided when supported.
+
+### Generating Speech
+
+Use the text-to-speech endpoint to convert text into audio.
+
+Specify:
+
+\* **model**: The text-to-speech model
+\* **input**: The text to convert
+\* **voice**: The voice supported by the selected model
+\* **response\_format**: The desired audio format
+\* **speed**: The speech generation speed
+
+### Creating an API Key
+
+1\. Create a workspace first
+2\. Create an API key associated with the workspace
+3\. Use the returned key token for inference requests
+4\. The key token is only shown once upon creation
+
+### Browsing Models
+
+The model catalog is publicly accessible without authentication. Use the v2 endpoint for advanced filtering, sorting, and pagination.
+
+## Getting Started
+
+1\. Create a workspace using the management API
+2\. Create an API key scoped to your workspace
+3\. Choose a supported AI model
+4\. Use the API key to call inference endpoints
+5\. Monitor usage through logs and activity endpoints
+
+Explore the API sections below to learn more about each capability.
+
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.
