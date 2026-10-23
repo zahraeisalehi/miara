@@ -106,12 +106,16 @@ export function createTimeline(opts: TimelineOptions) {
       meta: OperationMeta,
       fn: (operationId: string) => Promise<T>,
       reconcile?: () => Promise<unknown>,
+      /** Extra data for the success event (redacted here), e.g. a write's response. */
+      successData?: (result: T) => unknown,
     ): Promise<T> {
       const operationId = meta.operationId ?? randomUUID();
       await write(opEvent(meta, operationId, 'start', { data: meta.data }));
       try {
         const result = await fn(operationId);
-        await write(opEvent(meta, operationId, 'success'));
+        await write(
+          opEvent(meta, operationId, 'success', successData ? { data: successData(result) } : {}),
+        );
         return result;
       } catch (err) {
         const explained = isExplained(err);

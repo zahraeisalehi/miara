@@ -20,6 +20,12 @@ import type { ApprovalRow, ApprovalStore, Approver, Escalation } from './store.j
 
 export const APPROVAL_TTL_MS = 10 * 60 * 1000;
 
+const APPROVER_ACTOR: Record<Approver, Actor> = {
+  'web-user': 'web',
+  'mcp-elicitation': 'mcp',
+  'cli-user': 'cli',
+};
+
 export interface PendingApproval {
   id: string;
   tool: string;
@@ -155,6 +161,8 @@ export function createPolicyGate(opts: GateOptions): PolicyGate {
         return def.handler(args, ctx);
       },
       reconcile ? () => reconcile(args, ctx) : undefined,
+      // Writes keep their response on the timeline (redacted), so real write shapes are recorded.
+      tier >= 1 ? (r) => ({ result: r }) : undefined,
     );
     // Nothing leaves core unredacted: env values, secrets, IPs.
     return {
@@ -237,7 +245,7 @@ export function createPolicyGate(opts: GateOptions): PolicyGate {
         tool: row.tool,
         app: row.app ?? undefined,
         tier: row.tier,
-        actor: approver === 'web-user' ? 'web' : 'mcp',
+        actor: APPROVER_ACTOR[approver],
         messageFa: 'کاربر این کار را تأیید کرد.',
         messageEn: 'The user approved this action.',
         data: { approvalId: row.id, approver },

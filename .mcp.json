@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "miara": {
+      "command": "node",
+      "args": ["--import", "tsx", "apps/mcp/src/stdio.ts"]
+    }
+  }
+}

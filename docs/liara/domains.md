@@ -20,5 +20,6 @@ expected record values from the PaaS domain "check" response, not from memory. T
 - ALIAS works at the root (where CNAME can't). Record *type* can't be edited; delete and recreate instead.
 
 ## Risk tiers
-Create zone/record, add domain, enable SSL = tier 2. Delete zone/record/domain, disable SSL = tier 3.
+Create zone/record, add domain, enable SSL = **tier 1** (routine, automatic and visible on the timeline, per D19).
+Delete zone/record/domain, disable SSL = tier 3.
 Remind the user: `<app>.liara.run` expires 7 days after the first deploy, so finishing this flow is what keeps the site up.

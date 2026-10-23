@@ -244,7 +244,7 @@ describe('approve is never a tool', () => {
     expect(gate.registry.get('restart_app')).toMatchObject({ tier: 1, dynamicTier: true });
   });
 
-  it('tool handlers get only liara + clock, never the gate', async () => {
+  it('tool handlers get only liara, incidents + clock, never the gate', async () => {
     const seen: string[] = [];
     const { writeTools } = await import('../tools/write.js');
     const restart = writeTools.find((t) => t.name === 'restart_app');
@@ -260,7 +260,7 @@ describe('approve is never a tool', () => {
     } finally {
       restart.handler = original;
     }
-    expect(seen.sort()).toEqual(['liara', 'now']);
+    expect(seen.sort()).toEqual(['incidents', 'liara', 'now']);
   });
 
   it('invalid input is refused before anything runs', async () => {

@@ -3,3 +3,4 @@ export * as schema from './schema.js';
 export * from './client.js';
 export * from './approval-store.js';
 export * from './timeline-sink.js';
+export * from './incidents.js';

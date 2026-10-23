@@ -1,6 +1,6 @@
 // Timeline/audit events (CLAUDE.md non-negotiable 5): every operation's start, success, failure or unknown outcome.
 
-export type Actor = 'web' | 'mcp' | 'worker' | 'system';
+export type Actor = 'web' | 'mcp' | 'cli' | 'worker' | 'system';
 export type EventType = 'operation' | 'llm_call' | 'info';
 export type EventStatus = 'start' | 'success' | 'failure' | 'unknown' | 'info';
 /** How a tool ran: read (tier 0), auto (tier 1, no human), approved (tier ≥ 2 after approve). */

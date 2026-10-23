@@ -3,20 +3,14 @@ import { randomUUID } from 'node:crypto';
 
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { fixtureRoutes, testClient } from '../../test/helpers/liara-mock.js';
+import { makeTestCore, TEST_APP } from '../../test/helpers/fake-core.js';
 import type { Reply } from '../../test/helpers/liara-mock.js';
 import { REDACTED } from '../redact/index.js';
-import { createMemoryTimelineSink } from '../timeline/memory.js';
-import { createTimeline } from '../timeline/operation.js';
-import { readTools } from '../tools/read.js';
-import { writeTools } from '../tools/write.js';
 
-import { createPolicyGate } from './gate.js';
 import type { PolicyGate } from './gate.js';
 import type { ApprovalStore } from './store.js';
 
-export const APP = 'miara-something';
-const ACK: Reply = { status: 200, body: { message: 'ok' } };
+export const APP = TEST_APP;
 
 export interface StoreHarness {
   store: ApprovalStore;
@@ -32,25 +26,8 @@ export function makeGate(
   routes: Record<string, Reply> = {},
   now: () => Date = () => new Date(),
 ) {
-  const { client, calls } = testClient({
-    ...fixtureRoutes(),
-    [`POST /v1/projects/${APP}/actions/restart`]: ACK,
-    [`POST /v1/projects/${APP}/actions/scale`]: ACK,
-    [`POST /v1/projects/${APP}/resize`]: ACK,
-    'POST /v1/projects/update-envs': ACK,
-    ...routes,
-  });
-  const sink = createMemoryTimelineSink();
-  const timeline = createTimeline({ sink, secrets: [], now });
-  const gate = createPolicyGate({
-    tools: [...readTools, ...writeTools],
-    store,
-    timeline,
-    ctx: { liara: client, now },
-    secrets: [],
-  });
-  const writes = () => calls.filter((c) => c.method === 'POST');
-  return { gate, calls, writes, sink };
+  const core = makeTestCore({ store, routes, now });
+  return { gate: core.policy, calls: core.calls, writes: core.writes, sink: core.sink };
 }
 
 async function pendingId(gate: PolicyGate, tool: string, args: unknown): Promise<string> {

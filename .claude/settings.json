@@ -10,7 +10,8 @@
       "Bash(git checkout:*)",
       "Bash(git switch:*)",
       "Bash(git branch:*)",
-      "Bash(git reset:*)"
+      "Bash(git reset:*)",
+      "Bash(pnpm miara approve:*)"
     ],
     "allow": [
       "Bash(pnpm test:*)",

@@ -2,8 +2,9 @@
 import type { CostPreview, Tier } from '../tools/types.js';
 import type { Actor } from '../timeline/types.js';
 
-export type Approver = 'web-user' | 'mcp-elicitation';
-export const APPROVERS: readonly Approver[] = ['web-user', 'mcp-elicitation'];
+/** Who approved: the web card (Phase 4), MCP elicitation, or the terminal (`pnpm miara approve`). */
+export type Approver = 'web-user' | 'mcp-elicitation' | 'cli-user';
+export const APPROVERS: readonly Approver[] = ['web-user', 'mcp-elicitation', 'cli-user'];
 
 export interface Escalation {
   reasonFa: string;

@@ -4,11 +4,28 @@ import type { z } from 'zod';
 
 import type { LiaraClient } from '../liara/client.js';
 
+/** An incident as the handoff tools see it (db/incidents.ts reads the `incidents` table). */
+export interface Incident {
+  id: string;
+  app: string;
+  status: string;
+  rule: string;
+  severity: string;
+  titleFa: string;
+  summary: string | null;
+  openedAt: Date;
+}
+
+export interface IncidentReader {
+  listOpen(): Promise<Incident[]>;
+}
+
 export type Tier = 0 | 1 | 2 | 3;
 
 /** What a handler may use. Deliberately no policy gate here: a tool can never approve or execute another tool. */
 export interface ToolContext {
   liara: LiaraClient;
+  incidents: IncidentReader;
   now: () => Date;
 }
 
