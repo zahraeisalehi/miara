@@ -29,7 +29,7 @@ The model never calls tools. Three narrow LLM jobs, each with a zod schema and o
 2. **Diagnoser.** Input: an evidence pack. Output: ranked hypotheses
    `[{ cause, confidence, evidence[], action: { tool, args } | null, risk_tier, user_explanation_fa }]`.
    The proposed `tool` must exist in the registry, and the policy gate still decides.
-3. **Narrator.** Streams plain Persian explanations of workflow results. It has no authority.
+3. **Narrator.** Streams simple Persian explanations of workflow results as markdown (the UI renders it; Spike A). It has no authority.
 
 Then **code** runs the workflow. Tier 0–1 steps run automatically. Tier ≥ 2 steps emit an approval card (a UI
 data part) and stop until approved. The model provider sits behind one interface (`complete`, `stream`,
