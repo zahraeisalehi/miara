@@ -72,6 +72,38 @@ describe('redactDeep', () => {
     });
   });
 
+  it('redacts credential-like token keys but keeps LLM token counts', () => {
+    const out = redactDeep(
+      {
+        token: 't',
+        apiToken: 't',
+        access_token: 't',
+        refreshToken: 't',
+        usage: {
+          prompt_tokens: 18,
+          completion_tokens: 22,
+          total_tokens: 40,
+          completion_tokens_details: { reasoning_tokens: 4 },
+          max_tokens: 100,
+        },
+      },
+      [],
+    );
+    expect(out).toEqual({
+      token: REDACTED,
+      apiToken: REDACTED,
+      access_token: REDACTED,
+      refreshToken: REDACTED,
+      usage: {
+        prompt_tokens: 18,
+        completion_tokens: 22,
+        total_tokens: 40,
+        completion_tokens_details: { reasoning_tokens: 4 },
+        max_tokens: 100,
+      },
+    });
+  });
+
   it('redacts nested env values but keeps env keys', () => {
     const out = redactDeep(
       { project: { envs: [{ key: 'DATABASE_URL', value: 'postgres://u:p@h/db' }] } },

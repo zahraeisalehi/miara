@@ -39,7 +39,7 @@ export function flattenV2(body: z.infer<typeof V2LogsResponse>): LogLine[] {
           ts: Number(ns / 1_000_000n),
           stream: entry.type,
           message: entry._entry,
-          ...(group.metaData.releaseId ? { releaseId: group.metaData.releaseId } : {}),
+          ...(group.metaData?.releaseId ? { releaseId: group.metaData.releaseId } : {}),
         },
       });
     }

@@ -1,6 +1,7 @@
 // zod schemas for every Liara response seen live in Spike B (fixtures: test/fixtures/liara/, captured 2026-10-22).
 // Objects are loose (zod 4's name for passthrough): unknown fields are kept and never fail a parse.
-// Required fields are the ones the product reads; everything else observed is optional.
+// Required = a field core actually reads (marked `used:`). Everything else observed is optional, and nullish
+// unless we have seen it as a non-null value everywhere. Never loosen a used field to unknown.
 import { z } from 'zod';
 
 /** Liara's 4xx/5xx body, e.g. v1 logs with an ISO `since`: 400 "The `since` parameter must be a number." */
@@ -48,26 +49,30 @@ export const BundlePlan = z.looseObject({
   availableBackupInterval: z.array(z.string()).optional(),
 });
 
+// Not read by core (only `plans` is); kept typed for the UI.
 const Account = z.looseObject({
-  _id: z.string(),
-  isTeam: z.boolean(),
-  accountType: z.string(),
-  minCreditAmount: z.number().optional(),
+  _id: z.string().nullish(),
+  isTeam: z.boolean().nullish(),
+  accountType: z.string().nullish(),
+  minCreditAmount: z.number().nullish(),
 });
 
 export const MeResponse = z.looseObject({
-  user: Account,
+  user: Account.nullish(),
   /** Present in team mode (`teamID` set). */
   team: Account.extend({
-    teamName: z.string().optional(),
-    balance: z.number().optional(),
+    teamName: z.string().nullish(),
+    balance: z.number().nullish(),
     teamMemberRole: z
       .looseObject({
-        name: z.string(),
-        permissions: z.array(z.looseObject({ name: z.string(), type: z.string() })),
+        name: z.string().nullish(),
+        permissions: z
+          .array(z.looseObject({ name: z.string().nullish(), type: z.string().nullish() }))
+          .nullish(),
       })
-      .optional(),
-  }).optional(),
+      .nullish(),
+  }).nullish(),
+  /** used: liara/plans.ts */
   plans: z.looseObject({
     /** Keys are planIDs, e.g. `small-g2`. */
     projects: z.record(z.string(), ProjectPlan),
@@ -79,26 +84,26 @@ export const MeResponse = z.looseObject({
 // ---- GET /v1/billing (spec billing_billing_get-current-user-billing-information.md)
 
 const BillingAccount = z.looseObject({
-  balance: z.number(), // toman
-  accountType: z.string(),
-  minCreditAmount: z.number(),
-  isManualMinCredit: z.boolean().optional(),
+  balance: z.number(), // used: getBalance (toman)
+  minCreditAmount: z.number(), // used: getBalance
+  accountType: z.string().nullish(),
+  isManualMinCredit: z.boolean().nullish(),
 });
 
 export const BillingResponse = z.looseObject({
   user: BillingAccount,
   /** Present in team mode; use it instead of `user` when LIARA_TEAM_ID is set. */
-  team: BillingAccount.optional(),
+  team: BillingAccount.nullish(),
 });
 
 // ---- GET /v1/networks (CLI commands/network/list.ts:22)
 
 export const Network = z.looseObject({
-  _id: z.string(),
-  name: z.string(),
-  createdAt: z.string(),
-  projectCount: z.number().optional(),
-  databaseCount: z.number().optional(),
+  _id: z.string(), // used: create_app checks networkId
+  name: z.string().nullish(),
+  createdAt: z.string().nullish(),
+  projectCount: z.number().nullish(),
+  databaseCount: z.number().nullish(),
 });
 
 export const NetworksResponse = z.looseObject({ networks: z.array(Network) });
@@ -106,39 +111,39 @@ export const NetworksResponse = z.looseObject({ networks: z.array(Network) });
 // ---- GET /v1/projects, /v1/projects/{app} (spec pass_apps_get-details-of-all-projects.md, …-of-a-project.md)
 
 export const ProjectSummary = z.looseObject({
-  _id: z.string(),
-  /** The app name used in every /v1/projects/{app} path. */
+  /** used: the app name in every /v1/projects/{app} path. */
   project_id: z.string(),
-  type: z.string(), // platform, e.g. node, docker
-  status: z.string(), // e.g. ACTIVE
-  scale: z.number(),
-  planID: z.string(),
-  bundlePlanID: z.string(),
-  network: z.looseObject({ _id: z.string(), name: z.string() }).nullish(),
-  created_at: z.string(),
-  isDeployed: z.boolean().optional(),
+  status: z.string(), // used: appState (e.g. ACTIVE)
+  scale: z.number(), // used: appState
+  planID: z.string(), // used: change_plan cost preview
+  bundlePlanID: z.string(), // used: change_plan cost preview
+  _id: z.string().nullish(),
+  type: z.string().nullish(), // platform, e.g. node, docker
+  network: z.looseObject({ _id: z.string().nullish(), name: z.string().nullish() }).nullish(),
+  created_at: z.string().nullish(),
+  isDeployed: z.boolean().nullish(),
 });
 
 export const ProjectsResponse = z.looseObject({ projects: z.array(ProjectSummary) });
 
 export const ProjectEnv = z.looseObject({
-  key: z.string(),
-  value: z.string(),
-  encrypted: z.boolean().optional(),
+  key: z.string(), // used: set_env merge
+  value: z.string(), // used: set_env merge
+  encrypted: z.boolean().nullish(),
 });
 
 export const ProjectDetails = ProjectSummary.extend({
-  envs: z.array(ProjectEnv),
-  readOnlyRootFilesystem: z.boolean().optional(),
-  zeroDowntime: z.boolean().optional(),
-  /** D15: the free *.liara.run address. */
-  defaultSubdomain: z.boolean(),
-  defaultSubdomainExpired: z.boolean(),
-  keepDefaultSubdomain: z.boolean(),
-  dns: z.array(z.unknown()).optional(),
-  hourlyPrice: z.number().optional(), // plan part, toman/hour
-  bundleHourlyPrice: z.number().optional(), // bundle part, toman/hour
-  reservedDiskSpace: z.number().optional(),
+  envs: z.array(ProjectEnv), // used: set_env merge
+  readOnlyRootFilesystem: z.boolean().nullish(),
+  zeroDowntime: z.boolean().nullish(),
+  /** D15: the free *.liara.run address (read by the D15 warning, not by Phase 1b code). */
+  defaultSubdomain: z.boolean().nullish(),
+  defaultSubdomainExpired: z.boolean().nullish(),
+  keepDefaultSubdomain: z.boolean().nullish(),
+  dns: z.array(z.unknown()).nullish(),
+  hourlyPrice: z.number().nullish(), // plan part, toman/hour
+  bundleHourlyPrice: z.number().nullish(), // bundle part, toman/hour
+  reservedDiskSpace: z.number().nullish(),
 });
 
 export const ProjectResponse = z.looseObject({ project: ProjectDetails });
@@ -158,8 +163,8 @@ export const V1LogsResponse = z.array(
 export const V2LogsResponse = z.looseObject({
   data: z.array(
     z.looseObject({
-      metaData: z.looseObject({ releaseId: z.string().optional() }),
-      values: z.array(z.tuple([z.string(), z.string()])),
+      metaData: z.looseObject({ releaseId: z.string().nullish() }).nullish(),
+      values: z.array(z.tuple([z.string(), z.string()])), // used: logs.ts flattenV2
     }),
   ),
 });
@@ -170,14 +175,15 @@ export const V2LogEntry = z.looseObject({ type: z.string(), _entry: z.string() }
 // ---- GET /v1/projects/{app}/events (spec pass_apps_get-events-of-the-app.md)
 
 export const EventsResponse = z.looseObject({
+  // Not read by core yet (Phase 5 evidence packs will); typed for that.
   data: z.array(
     z.looseObject({
-      id: z.string(), // container id
-      status: z.string(), // create | start | kill | stop | die | …
-      action: z.string(),
-      time: z.string(), // unix seconds, as a string
-      release: z.string().optional(),
-      tag: z.string().optional(), // release tag, e.g. v2
+      id: z.string().nullish(), // container id
+      status: z.string().nullish(), // create | start | kill | stop | die | …
+      action: z.string().nullish(),
+      time: z.string().nullish(), // unix seconds, as a string
+      release: z.string().nullish(),
+      tag: z.string().nullish(), // release tag, e.g. v2
     }),
   ),
 });
@@ -185,28 +191,29 @@ export const EventsResponse = z.looseObject({
 // ---- Releases (spec pass_apps_get-releases-of-app.md; CLI commands/deploy.ts:488, services/build-logs.ts:26)
 
 export const Release = z.looseObject({
-  _id: z.string(),
-  type: z.string(), // DEPLOY
-  state: z.string(), // READY | FAILED | CANCELED | TIMEDOUT | UNHEALTHY | DEPLOYING | … (CLI services/build-logs.ts:50-82)
-  projectType: z.string().optional(),
-  createdAt: z.string(),
-  finishedAt: z.string().optional(),
-  tag: z.string().optional(),
-  port: z.number().optional(),
-  imageName: z.string().optional(),
-  buildLocation: z.string().optional(),
-  sourceAvailable: z.boolean().optional(),
-  queue: z.number().optional(), // CLI commands/deploy.ts:485-506
-  failReason: z.string().optional(),
+  _id: z.string(), // used: deploy reconcile
+  // used: READY | FAILED | CANCELED | TIMEDOUT | UNHEALTHY | DEPLOYING | … (CLI services/build-logs.ts:50-82)
+  state: z.string(),
+  createdAt: z.string(), // used: deploy reconcile
+  type: z.string().nullish(), // DEPLOY
+  projectType: z.string().nullish(),
+  finishedAt: z.string().nullish(),
+  tag: z.string().nullish(),
+  port: z.number().nullish(),
+  imageName: z.string().nullish(),
+  buildLocation: z.string().nullish(),
+  sourceAvailable: z.boolean().nullish(),
+  queue: z.number().nullish(), // CLI commands/deploy.ts:485-506
+  failReason: z.string().nullish(),
 });
 
 /** GET /v1/projects/{app}/releases?page=&count= */
 export const ReleasesResponse = z.looseObject({
-  total: z.number(),
-  currentRelease: z.string().nullish(),
-  readyReleasesCount: z.number().optional(),
-  releases: z.array(Release),
-  platform: z.string().optional(),
+  releases: z.array(Release), // used
+  currentRelease: z.string().nullish(), // used: deploy reconcile
+  total: z.number().nullish(),
+  readyReleasesCount: z.number().nullish(),
+  platform: z.string().nullish(),
 });
 
 /** GET /v1/releases/{releaseID} */
@@ -215,17 +222,17 @@ export const ReleaseResponse = z.looseObject({ release: Release });
 /** GET /v2/releases/{releaseID}/build-logs?since=<createdAt of last line> */
 export const BuildLogsResponse = z.looseObject({
   release: z.looseObject({
-    state: z.string(),
-    status: z.string().optional(),
-    failReason: z.string().optional(),
+    state: z.string(), // used: build polling (Phase 3)
+    status: z.string().nullish(),
+    failReason: z.string().nullish(),
   }),
   buildOutput: z.array(
     z.looseObject({
-      _id: z.string(),
-      line: z.string(),
-      stream: z.string(), // anything but STDOUT means the build failed (CLI services/build-logs.ts:30-46)
-      releaseID: z.string(),
-      createdAt: z.string(),
+      line: z.string(), // used
+      stream: z.string(), // used: anything but STDOUT means the build failed (CLI services/build-logs.ts:30-46)
+      createdAt: z.string(), // used: the next poll's `since`
+      _id: z.string().nullish(),
+      releaseID: z.string().nullish(),
     }),
   ),
 });
@@ -249,15 +256,14 @@ export const MetricSeriesResponse = z.looseObject({
 
 // ---- Domains (spec pass_domains_get-all-domains.md; CLI commands/deploy.ts:246). source: spec (unverified, no fixture yet).
 
+// Only the list length is read (set_env tierFor); fields typed for the domain workflow.
 export const Domain = z.looseObject({
-  _id: z.string(),
-  name: z.string(),
-  type: z.string().optional(),
-  project: z
-    .looseObject({ _id: z.string().optional(), project_id: z.string().optional() })
-    .nullish(),
-  status: z.string().optional(),
-  certificatesStatus: z.string().optional(),
+  _id: z.string().nullish(),
+  name: z.string().nullish(),
+  type: z.string().nullish(),
+  project: z.looseObject({ _id: z.string().nullish(), project_id: z.string().nullish() }).nullish(),
+  status: z.string().nullish(),
+  certificatesStatus: z.string().nullish(),
 });
 
 /** GET /v1/domains?project={app} */

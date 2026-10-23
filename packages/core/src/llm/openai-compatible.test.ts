@@ -8,11 +8,13 @@ import { z } from 'zod';
 
 import { RecordRouterOutput } from '../../scripts/record-llm.js';
 import { createMemoryTimelineSink } from '../timeline/memory.js';
+import type { TimelineEvent } from '../timeline/types.js';
 import { createTimeline } from '../timeline/operation.js';
 
 import { assertStrictCompatible, strictJsonSchema } from './json.js';
 import { createOpenAICompatibleProvider } from './openai-compatible.js';
 import { LlmError } from './provider.js';
+import type { Usage } from './provider.js';
 
 const DIR = resolve(import.meta.dirname, '../../test/fixtures/llm');
 const KEY = 'boxapi-test-key-0123456789';
@@ -31,6 +33,63 @@ interface Fixture {
 }
 const fixture = (name: (typeof NAMES)[number]): Fixture =>
   JSON.parse(readFileSync(resolve(DIR, `${name}.json`), 'utf8')) as Fixture;
+
+/**
+ * The usage BoxAPI actually returned in a fixture: `body.usage`, or the SSE chunk that carries `usage`.
+ * Parsed with zod so a broken recording (e.g. redacted counts) fails here, loudly, as numbers or nothing.
+ */
+const RecordedUsage = z.looseObject({
+  prompt_tokens: z.number(),
+  completion_tokens: z.number(),
+  completion_tokens_details: z.looseObject({ reasoning_tokens: z.number() }).nullish(),
+  reasoning_tokens: z.number().optional(),
+  cost: z.number(),
+});
+
+function recordedUsage(f: Fixture): z.infer<typeof RecordedUsage> {
+  let raw: unknown = f.body?.usage;
+  if (f.sse) {
+    for (const line of f.sse.split('\n')) {
+      if (!line.startsWith('data:') || line.includes('[DONE]')) continue;
+      const chunk = JSON.parse(line.slice(5)) as { usage?: unknown };
+      if (chunk.usage) raw = chunk.usage;
+    }
+  }
+  return RecordedUsage.parse(raw);
+}
+
+/** What the adapter must produce from that usage (OpenAI-style → Usage). Values come from the fixture, never literals. */
+function expectedUsage(f: Fixture) {
+  const u = recordedUsage(f);
+  return {
+    promptTokens: u.prompt_tokens,
+    completionTokens: u.completion_tokens,
+    reasoningTokens: u.completion_tokens_details?.reasoning_tokens ?? u.reasoning_tokens,
+    costUsd: u.cost,
+  };
+}
+
+type Mapped = ReturnType<typeof expectedUsage>;
+
+/** The adapter's Usage and the timeline's llm_call event both carry exactly the recorded numbers. */
+function expectUsageMapped(
+  usage: Usage,
+  expected: Mapped,
+  events: TimelineEvent[],
+  job: string,
+): void {
+  for (const key of ['promptTokens', 'completionTokens', 'reasoningTokens', 'costUsd'] as const) {
+    expect(typeof usage[key], key).toBe('number');
+    expect(usage[key], key).toBeCloseTo(expected[key] ?? Number.NaN, 12);
+  }
+  const llmEvents = events.filter((e) => e.type === 'llm_call');
+  expect(llmEvents.length).toBeGreaterThan(0);
+  const recorded = llmEvents.at(-1)?.llm;
+  expect(recorded).toMatchObject({ job, model: usage.model });
+  for (const key of ['promptTokens', 'completionTokens', 'reasoningTokens', 'costUsd'] as const) {
+    expect(recorded?.[key], `timeline ${key}`).toBe(usage[key]);
+  }
+}
 
 /** A copy of a recorded body with the content replaced (fixture "derived-from" the recording). */
 function withContent(f: Fixture, content: string): Fixture {
@@ -75,17 +134,17 @@ describe.skipIf(!haveFixtures)('LLM adapter on recorded BoxAPI fixtures', () => 
     expect(text.trim()).toBe(f.body?.choices[0]?.message.content.trim());
     expect(requests[0]).toMatchObject({ model: 'gpt-5.4-mini', reasoning_effort: 'low' });
     expect(requests[0]).not.toHaveProperty('tools');
-    expect(usage.promptTokens).toBeGreaterThan(0);
+    expectUsageMapped(usage, expectedUsage(f), sink.events, 'narrator');
     expect(sink.events[0]).toMatchObject({
       type: 'llm_call',
       status: 'success',
       llm: { job: 'narrator' },
     });
-    if (typeof f.body?.usage?.cost === 'number') expect(usage.costUsd).toBe(f.body.usage.cost);
   });
 
   it('stream: yields deltas, asks for usage, records the call', async () => {
-    const { provider, requests, sink } = setup([fixture('stream')]);
+    const f = fixture('stream');
+    const { provider, requests, sink } = setup([f]);
     const { textStream, usage } = provider.stream([{ role: 'user', content: 'Count' }], {
       job: 'narrator',
     });
@@ -93,13 +152,15 @@ describe.skipIf(!haveFixtures)('LLM adapter on recorded BoxAPI fixtures', () => 
     for await (const delta of textStream) text += delta;
     expect(text).toMatch(/1.*2.*3/);
     expect(requests[0]).toMatchObject({ stream: true, stream_options: { include_usage: true } });
-    expect((await usage).model).toBe('gpt-5.4-mini');
+    // Usage comes from the final SSE chunk; reasoning tokens sit in completion_tokens_details.
+    expectUsageMapped(await usage, expectedUsage(f), sink.events, 'narrator');
     expect(sink.events.map((e) => e.type)).toEqual(['llm_call']);
   });
 
   it('completeJSON: strict json_schema, zod-validated', async () => {
-    const { provider, requests } = setup([fixture('json-schema-router')]);
-    const { data } = await provider.completeJSON(
+    const f = fixture('json-schema-router');
+    const { provider, requests, sink } = setup([f]);
+    const { data, usage } = await provider.completeJSON(
       RecordRouterOutput,
       [{ role: 'user', content: 'x' }],
       {
@@ -108,6 +169,7 @@ describe.skipIf(!haveFixtures)('LLM adapter on recorded BoxAPI fixtures', () => 
       },
     );
     expect(data).toEqual({ intent: 'restart', appName: 'miara-demo' });
+    expectUsageMapped(usage, expectedUsage(f), sink.events, 'router');
     expect(requests[0]?.response_format).toMatchObject({
       type: 'json_schema',
       json_schema: { name: 'router', strict: true },
@@ -135,6 +197,18 @@ describe.skipIf(!haveFixtures)('LLM adapter on recorded BoxAPI fixtures', () => 
     });
     expect(repairMessages.at(-1)?.content).toContain('intent');
     expect(sink.events.filter((e) => e.type === 'llm_call')).toHaveLength(2);
+    // Both calls are billed: the returned usage is the sum of the two recorded usages.
+    const one = expectedUsage(good);
+    const sum = (k: keyof Mapped) => (one[k] ?? 0) * 2;
+    for (const key of ['promptTokens', 'completionTokens', 'reasoningTokens', 'costUsd'] as const) {
+      expect(typeof usage[key], key).toBe('number');
+      expect(usage[key], key).toBeCloseTo(sum(key), 12);
+    }
+    // Each call's own event carries one recording's numbers.
+    for (const e of sink.events.filter((ev) => ev.type === 'llm_call')) {
+      expect(e.llm?.costUsd).toBeCloseTo(one.costUsd, 12);
+      expect(e.llm?.promptTokens).toBe(one.promptTokens);
+    }
     expect(usage.latencyMs).toBeGreaterThanOrEqual(0);
   });
 
@@ -163,6 +237,28 @@ describe('LLM adapter (no fixtures needed)', () => {
     expect(err).toMatchObject({ kind: 'http', status: 401 });
     expect(JSON.stringify(err.raw)).not.toContain(KEY);
     expect(sink.events[0]).toMatchObject({ type: 'llm_call', status: 'failure' });
+  });
+
+  it('a body that fails the Completion schema is invalid_response naming the paths, not the values', async () => {
+    const { provider } = setup([
+      {
+        status: 200,
+        body: {
+          choices: [{ message: { content: 42 } }],
+          usage: { prompt_tokens: 'VALUE-XYZ' },
+        } as never,
+      },
+    ]);
+    const err = (await provider
+      .complete([{ role: 'user', content: 'x' }], { job: 'router' })
+      .catch((e: unknown) => e)) as LlmError;
+    expect(err).toMatchObject({ kind: 'invalid_response', status: 200 });
+    expect(err.message).toContain('choices.0.message.content');
+    expect(err.message).toContain('usage.prompt_tokens');
+    expect(err.raw).toMatchObject({
+      issues: [{ path: 'choices.0.message.content' }, { path: 'usage.prompt_tokens' }],
+    });
+    expect(JSON.stringify(err.raw) + err.message).not.toContain('VALUE-XYZ');
   });
 
   it('strictJsonSchema accepts nullable fields and rejects optional ones', () => {

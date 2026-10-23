@@ -45,6 +45,8 @@ describe('Liara fixtures are redacted', () => {
       expect(text).not.toMatch(BEARER);
       expect(text).not.toMatch(EMAIL);
       for (const v of envValues(JSON.parse(text))) expect(v).toBe(REDACTED);
+      // Counts are data, not credentials: a redacted `*_tokens` field means the recorder broke the fixture.
+      expect(text).not.toMatch(/"\w*tokens\w*":\s*"\[REDACTED/);
     });
   }
 });

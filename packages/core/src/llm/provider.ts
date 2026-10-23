@@ -64,13 +64,13 @@ export class LlmError extends Error {
   readonly messageEn: string;
   readonly raw: unknown;
 
-  constructor(kind: LlmErrorKind, raw?: unknown, status = 0) {
-    super(MESSAGES[kind].en);
+  constructor(kind: LlmErrorKind, raw?: unknown, status = 0, detail?: string) {
+    super(detail ? `${MESSAGES[kind].en} (${detail})` : MESSAGES[kind].en);
     this.name = 'LlmError';
     this.kind = kind;
     this.status = status;
     this.messageFa = MESSAGES[kind].fa;
-    this.messageEn = MESSAGES[kind].en;
+    this.messageEn = this.message;
     this.raw = raw;
   }
 }

@@ -3,6 +3,8 @@ import type { z } from 'zod';
 
 import { redactDeep, redactString } from '../redact/index.js';
 
+import { issueLine, summarizeIssues } from '../util/zod-issues.js';
+
 import { LiaraError, kindForStatus } from './errors.js';
 
 export const LIARA_ORIGIN = 'https://api.liara.ir';
@@ -137,11 +139,13 @@ export function createLiaraHttp(opts: HttpOptions): LiaraHttp {
 
       const result = spec.schema.safeParse(parsedBody);
       if (!result.success) {
+        // Paths and type messages only, never body values: the next mismatch is diagnosable from the error alone.
         throw new LiaraError({
           kind: 'invalid_response',
           status: res.status,
           endpoint,
-          raw: result.error.issues.map((i) => ({ path: i.path.join('.'), message: i.message })),
+          liaraMessage: `schema mismatch at ${issueLine(result.error.issues)}`,
+          raw: { issues: summarizeIssues(result.error.issues) },
         });
       }
       return result.data;

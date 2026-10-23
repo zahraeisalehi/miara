@@ -1,6 +1,6 @@
 {
   "source": "recorded live by scripts/record-llm.ts",
-  "capturedAt": "2026-10-23T05:18:20.234Z",
+  "capturedAt": "2026-10-23T06:28:17.470Z",
   "request": {
     "model": "gpt-5.4-mini",
     "reasoning_effort": "low",
@@ -53,8 +53,8 @@
         "native_finish_reason": "stop"
       }
     ],
-    "created": 1792732699,
-    "id": "gen-chatcmpl-Ec1xTDdMz83QG4GCtygrsvdIhqN7Z",
+    "created": 1792736896,
+    "id": "gen-chatcmpl-Ec33ANU1zDNZWCTRRFeWhIeVohBXq",
     "model": "gpt-5.4-mini",
     "object": "chat.completion",
     "prompt_filter_results": [
@@ -85,26 +85,34 @@
       }
     ],
     "routing": {
-      "serving_pipereplica": "d20261022090208-4d2530fd-default-r1-dp0-default"
+      "serving_pipereplica": "d20261022090208-4d2530fd-default-r2-dp0-default"
     },
     "service_tier": "default",
     "system_fingerprint": null,
     "usage": {
-      "completion_tokens": "[REDACTED]",
-      "completion_tokens_details": "[REDACTED]",
+      "completion_tokens": 14,
+      "completion_tokens_details": {
+        "accepted_prediction_tokens": 0,
+        "audio_tokens": 0,
+        "reasoning_tokens": 4,
+        "rejected_prediction_tokens": 0
+      },
       "latency_checkpoint": {
         "engine_tbt_ms": 4,
-        "engine_ttft_ms": 33,
-        "engine_ttlt_ms": 91,
-        "pre_inference_ms": 99,
+        "engine_ttft_ms": 31,
+        "engine_ttlt_ms": 94,
+        "pre_inference_ms": 91,
         "service_tbt_ms": 4,
-        "service_ttft_ms": 253,
-        "service_ttlt_ms": 306,
-        "user_visible_ttft_ms": 154
+        "service_ttft_ms": 314,
+        "service_ttlt_ms": 370,
+        "user_visible_ttft_ms": 223
       },
-      "prompt_tokens": "[REDACTED]",
-      "prompt_tokens_details": "[REDACTED]",
-      "total_tokens": "[REDACTED]",
+      "prompt_tokens": 11,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cached_tokens": 0
+      },
+      "total_tokens": 25,
       "cost": 0.0000612375,
       "is_byok": false,
       "cost_details": {

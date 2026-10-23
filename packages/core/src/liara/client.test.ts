@@ -128,11 +128,25 @@ describe('retries and errors', () => {
     expect(missing.messageFa).toContain('LIARA_TEAM_ID');
   });
 
-  it('a 200 that fails the schema is `invalid_response`, without the body', async () => {
-    const { client } = testClient({ 'GET /v1/projects': { status: 200, body: { apps: [] } } });
-    const err = (await client.listApps().catch((e: unknown) => e)) as LiaraError;
+  it('a 200 that fails the schema is `invalid_response` naming the issue paths, never the values', async () => {
+    const { client } = testClient({
+      [`GET /v1/projects/${APP}/releases`]: {
+        status: 200,
+        body: { releases: [{ _id: 'r1', state: 7, createdAt: null, secretish: 'VALUE-XYZ' }] },
+      },
+    });
+    const err = (await client.listReleases(APP).catch((e: unknown) => e)) as LiaraError;
     expect(err.kind).toBe('invalid_response');
-    expect(JSON.stringify(err.raw)).toContain('projects');
+    expect(err.message).toContain('releases.0.state (expected string, received number)');
+    expect(err.message).toContain('releases.0.createdAt (expected string, received null)');
+    expect(err.raw).toMatchObject({
+      issues: [
+        { path: 'releases.0.state', code: 'invalid_type' },
+        { path: 'releases.0.createdAt', code: 'invalid_type' },
+      ],
+    });
+    expect(JSON.stringify(err.raw) + err.message).not.toContain('VALUE-XYZ');
+    expect(JSON.stringify(err.raw) + err.message).not.toContain('r1');
   });
 
   it('redacts the token out of error bodies', async () => {

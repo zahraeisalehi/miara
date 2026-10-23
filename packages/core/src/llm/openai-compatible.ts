@@ -4,6 +4,7 @@ import { z } from 'zod';
 
 import { redactString } from '../redact/index.js';
 import type { Timeline } from '../timeline/operation.js';
+import { issueLine, summarizeIssues } from '../util/zod-issues.js';
 
 import { parseJsonContent, strictJsonSchema } from './json.js';
 import { LlmError } from './provider.js';
@@ -134,7 +135,14 @@ export function createOpenAICompatibleProvider(opts: OpenAICompatibleOptions): L
         ...extra,
       });
       const parsed = Completion.safeParse(await res.json());
-      if (!parsed.success) throw new LlmError('invalid_response', parsed.error.issues);
+      if (!parsed.success) {
+        throw new LlmError(
+          'invalid_response',
+          { issues: summarizeIssues(parsed.error.issues) },
+          res.status,
+          `schema mismatch at ${issueLine(parsed.error.issues)}`,
+        );
+      }
       const usage = toUsage(
         parsed.data.model ?? opts.model,
         parsed.data.usage,
@@ -238,7 +246,7 @@ export function createOpenAICompatibleProvider(opts: OpenAICompatibleOptions): L
       );
       const b = tryParse(repair.text);
       if (b.ok) return { data: b.data, usage: sumUsage(first.usage, repair.usage) };
-      throw new LlmError('invalid_json', { issues: b.issues });
+      throw new LlmError('invalid_json', { issues: b.issues }, 0, b.issues.join('; '));
     },
   };
 }

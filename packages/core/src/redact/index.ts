@@ -3,8 +3,10 @@
 const NON_SECRET_ENV_KEYS = new Set(['LLM_PROVIDER', 'BOXAPI_MODEL', 'WEB_PORT']);
 const MIN_SECRET_LENGTH = 8;
 
+// `token(?!s)`: credentials (`token`, `apiToken`, `access_token`) yes; LLM usage counts (`prompt_tokens`,
+// `completion_tokens_details`, `max_tokens`) no. Redacting those destroyed the first recorded LLM fixtures.
 const CREDENTIAL_KEY =
-  /token|secret|password|passwd|api[_-]?key|authorization|cookie|accesskey|secretkey|privatekey/i;
+  /token(?!s)|secret|password|passwd|api[_-]?key|authorization|cookie|accesskey|secretkey|privatekey/i;
 const PII_KEY = /email|phone|mobile|fullname|nationalcode|address|avatar|birth/i;
 
 const JWT = /eyJ[\w-]+\.[\w-]+\.[\w-]+/g;
