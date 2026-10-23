@@ -18,22 +18,39 @@ All services use `Authorization: Bearer <LIARA_API_TOKEN>` (JWT from the console
 | IaaS | `https://iaas-api.liara.ir` (not used) |
 Rate limits exist but aren't published, so the client needs backoff on 429.
 
+**Team mode.** Resources owned by a Liara team are only visible with a `teamID` query parameter. The CLI sets it on
+**every** request in a got `beforeRequest` hook, as an empty string for the personal account
+(`docs/vendor/liara-cli/src/base.ts:285-293`). It is a query parameter, not a header. Without it, a team's apps don't show up
+(`GET /v1/projects` returned 0 apps for a team-owned app; with it, 2. ✅ Spike B). Miara reads an optional `LIARA_TEAM_ID`, and **the core Liara
+client must append `teamID` to every call**, the same way. Details are in `api-findings.md` §0.
+
 ## Available
-- **Apps**: list, details, create (platform, plan, feature-plan = bundle, network, read-only), delete, on/off,
+- **Apps**: list (each item's app name is `project_id`, not `name`), details, create (platform, plan, feature-plan = bundle, network, read-only), delete, on/off,
   restart, change plan, logs, events, releases, applets, update port.
 - **Deploy**: source upload + release (from the specs), or a Docker image deploy. The CLI also supports build location
   `iran | germany`, `--detach`, a release message, disks, no-cache, and app-log streaming after a deploy. Get the exact calls from `src/commands/deploy.ts`.
-- **Networks**: list/create exist (CLI `network create|list`). They're missing from the API docs, so take them from `src/commands/network/*`.
-- **Plans**: list exists (CLI `plan list`). It's missing from the API docs, so take it from `src/commands/plan/list.ts`. Prefer it over `plans.md`
-  for IDs; use `plans.md` only for human-readable prices.
+- **Networks**: list ✅ (`GET v1/networks`) / create ⏸ (CLI `network create|list`). They're missing from the API docs, so take them from `src/commands/network/*`.
+- **Plans** ✅: the catalog is `GET v1/me` → `plans.projects` (planIDs, e.g. `small-g2`) and `plans.projectBundlePlans[planID]`
+  (bundlePlanIDs `free | basic | standard | pro`, with prices and per-bundle limits). Key bundles **by ID**: the CLI's positional
+  labels are wrong for the live order (`api-findings.md` §3). `plans.md` is the offline fallback and the console-name mapping.
+- **App plan, cost and default subdomain** ✅: `GET v1/projects/{app}` gives `planID`, `bundlePlanID`, `hourlyPrice` (plan) +
+  `bundleHourlyPrice` (bundle), and `defaultSubdomain`, `defaultSubdomainExpired`, `keepDefaultSubdomain`. **D15 uses the last
+  three** to warn before the `*.liara.run` address expires and to tell the user plainly when it already has.
+- **Build status and build logs** ✅: `GET v1/releases/{id}` (state, queue) and `GET v2/releases/{id}/build-logs`
+  (`{ release: { state }, buildOutput[] }`); release history `GET v1/projects/{app}/releases`. See `api-findings.md` §4.
+- **Runtime logs** ✅: **primary** `GET v2/projects/{app}/logs?start=<unix s>&direction=forward&last_lines=false` (grouped, JSON-encoded lines).
+  **Fallback** `GET v1/projects/{app}/logs?since=<unix seconds>` (an ISO `since` is a 400). v1 currently returns a CLI-upgrade
+  notice as a log line, so filter it out.
+- **Events** ✅: `GET v1/projects/{app}/events` (container create/start/kill/stop/die, `time` is unix seconds as a string).
 - **Settings**: zero-downtime, default subdomain, static IP, read-only, envs (set/unset; this restarts the app).
 - **Disks**: list/create/resize/delete, backups (create/list/download), FTP.
 - **Domains** (PaaS): check, list, create, attach to app, redirect, SSL on/off, delete. See `domains.md`.
-- **Reports**: summary, CPU, memory, network rx/tx (apps and DBs).
+- **Reports**: summary, CPU, memory (✅ for apps: values are strings, one series per container `applet`, 30 s step), network rx/tx (apps and DBs).
 - **DBaaS**: create (`hostname, type, planID, version, publicNetwork`; types mysql, postgres, mongodb, redis,
   mariadb), list, get (connection info), delete, power, resize, settings, public-network toggle, backups, reports, events.
 - **DNS zones/records**: see `domains.md`.
-- **Billing**: `GET /v1/billing` → `user.balance` (number), `minCreditAmount`, `accountType`.
+- **Billing** ✅: `GET /v1/billing` → `user: { balance, minCreditAmount, accountType, isManualMinCredit }`. In team mode it also
+  returns `team: { … same }`. **When `LIARA_TEAM_ID` is set, show and check `team.balance`** (the team pays), else `user.balance`.
 - **Console over WebSocket**: `wss://api.liara.ir?token=…&cmd=…&project_id=…`. **Excluded from the MVP** (too risky).
 
 ## Not available (tell the user plainly)
@@ -42,4 +59,6 @@ Rate limits exist but aren't published, so the client needs backoff on 429.
 - Webhooks/alerts: none, so Miara polls.
 - Connecting GitHub to Liara: console only (OAuth). The API can only read integrations.
 - Token scopes: probably full-access, so Miara's policy gate is the only guardrail.
-- Still UNCONFIRMED until spike B: build status/build-log endpoint shape, and what each feature bundle includes.
+- Still UNCONFIRMED (needs a write, so not testable read-only in Spike B): source upload, release create/cancel, network create,
+  app create/resize, the failed-build states, and whether DNS and the other hosts honour `teamID`. Confirmed in Spike B
+  (2026-10-22): team mode, plans/bundles and their limits, build status and build logs, runtime logs (v2 primary), billing, events, reports.

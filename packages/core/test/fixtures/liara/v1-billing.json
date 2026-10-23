@@ -1,0 +1,25 @@
+{
+  "request": {
+    "method": "GET",
+    "path": "/v1/billing",
+    "query": {}
+  },
+  "source": "spec billing_billing_get-current-user-billing-information.md",
+  "status": 200,
+  "durationMs": 171,
+  "capturedAt": "2026-10-22T17:50:49.052Z",
+  "body": {
+    "user": {
+      "balance": 0,
+      "accountType": "REAL_PERSON",
+      "minCreditAmount": 20000,
+      "isManualMinCredit": false
+    },
+    "team": {
+      "balance": 1994576.5,
+      "accountType": "REAL_PERSON",
+      "minCreditAmount": 20000,
+      "isManualMinCredit": false
+    }
+  }
+}

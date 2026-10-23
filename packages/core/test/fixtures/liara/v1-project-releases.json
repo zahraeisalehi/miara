@@ -1,0 +1,84 @@
+{
+  "request": {
+    "method": "GET",
+    "path": "/v1/projects/{app}/releases",
+    "query": {
+      "page": "1",
+      "count": "10"
+    }
+  },
+  "source": "spec pass_apps_get-releases-of-app.md",
+  "status": 200,
+  "durationMs": 167,
+  "capturedAt": "2026-10-22T17:50:50.663Z",
+  "body": {
+    "total": 2,
+    "currentRelease": "6ada4a5f7ebf55567c84fb56",
+    "readyReleasesCount": 2,
+    "releases": [
+      {
+        "_id": "6ada4a5f7ebf55567c84fb56",
+        "type": "DEPLOY",
+        "imageName": "registry.c1.liara.ir/apps/6ada273c4400f7631d4dcbba:zssba2bcqh8p",
+        "projectType": "node",
+        "state": "READY",
+        "port": 3000,
+        "buildArgs": {
+          "__NODE_MIRROR": "true",
+          "__NODE_MIRRORURL": "http://[REDACTED:IP]/repository/npm-proxy",
+          "__NODE_GITHUBMIRRORURL": "http://[REDACTED:IP]/repository/github-proxy",
+          "__NODE_MAPBOXMIRRORURL": "http://[REDACTED:IP]/repository/mapbox-proxy",
+          "__NODE_TIMEZONE": "Asia/Tehran"
+        },
+        "buildLocation": "iran",
+        "buildTimeout": 5,
+        "client": "Linux x86_64/Firefox:140",
+        "disks": [],
+        "finishedAt": "2026-10-22T17:40:03.653Z",
+        "platformConfig": {
+          "version": "22",
+          "mirror": true,
+          "mirrorURL": "http://[REDACTED:IP]/repository/npm-proxy",
+          "githubMirrorURL": "http://[REDACTED:IP]/repository/github-proxy",
+          "mapboxMirrorURL": "http://[REDACTED:IP]/repository/mapbox-proxy",
+          "timezone": "Asia/Tehran"
+        },
+        "createdAt": "2026-10-22T17:39:43.513Z",
+        "tag": "v2",
+        "sourceAvailable": true
+      },
+      {
+        "_id": "6ada2931aa8f2ba374c10af5",
+        "type": "DEPLOY",
+        "imageName": "registry.c1.liara.ir/apps/6ada273c4400f7631d4dcbba:2yazc1nnkv65",
+        "projectType": "node",
+        "state": "READY",
+        "port": 3000,
+        "buildArgs": {
+          "__NODE_MIRROR": "true",
+          "__NODE_MIRRORURL": "http://[REDACTED:IP]/repository/npm-proxy",
+          "__NODE_GITHUBMIRRORURL": "http://[REDACTED:IP]/repository/github-proxy",
+          "__NODE_MAPBOXMIRRORURL": "http://[REDACTED:IP]/repository/mapbox-proxy",
+          "__NODE_TIMEZONE": "Asia/Tehran"
+        },
+        "buildLocation": "iran",
+        "buildTimeout": 5,
+        "client": "Linux x86_64/Firefox:140",
+        "disks": [],
+        "finishedAt": "2026-10-22T15:18:56.243Z",
+        "platformConfig": {
+          "version": "22",
+          "mirror": true,
+          "mirrorURL": "http://[REDACTED:IP]/repository/npm-proxy",
+          "githubMirrorURL": "http://[REDACTED:IP]/repository/github-proxy",
+          "mapboxMirrorURL": "http://[REDACTED:IP]/repository/mapbox-proxy",
+          "timezone": "Asia/Tehran"
+        },
+        "createdAt": "2026-10-22T15:18:09.873Z",
+        "tag": "v1",
+        "sourceAvailable": true
+      }
+    ],
+    "platform": "node"
+  }
+}

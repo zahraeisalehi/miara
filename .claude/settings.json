@@ -2,9 +2,9 @@
   "permissions": {
     "deny": [
       "Read(./.env)",
-      "Read(./.env.*)",
-      "Read(./**/.env)",
-      "Read(./**/.env.*)",
+      "Read(./.env.local)",
+      "Read(./.env.*.local)",
+      "Read(./**/.env.local)",
       "Bash(git commit:*)",
       "Bash(git push:*)",
       "Bash(git checkout:*)",

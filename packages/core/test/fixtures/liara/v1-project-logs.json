@@ -1,0 +1,20 @@
+{
+  "request": {
+    "method": "GET",
+    "path": "/v1/projects/{app}/logs",
+    "query": {
+      "since": "1792687849"
+    }
+  },
+  "source": "spec pass_apps_get-logs-of-app.md",
+  "status": 200,
+  "durationMs": 99,
+  "capturedAt": "2026-10-22T17:50:49.683Z",
+  "body": [
+    {
+      "type": "stdout",
+      "datetime": "2026-10-22T17:50:49.668Z",
+      "message": "Please upgrade your client using: `npm install -g @liara/cli`"
+    }
+  ]
+}

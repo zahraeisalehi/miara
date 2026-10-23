@@ -1,0 +1,19 @@
+{
+  "request": {
+    "method": "GET",
+    "path": "/v1/projects/{app}/logs",
+    "query": {
+      "since": "2026-10-22T16:42:16.000Z"
+    }
+  },
+  "source": "spec pass_apps_get-logs-of-app.md (ISO since)",
+  "status": 400,
+  "durationMs": 54,
+  "capturedAt": "2026-10-22T17:42:16.449Z",
+  "body": {
+    "statusCode": 400,
+    "error": "Bad Request",
+    "message": "The `since` parameter must be a number.",
+    "data": null
+  }
+}

@@ -5,17 +5,54 @@
 `docs/vendor/liara-cli/src/commands/plan/list.ts:21-45`. Details are in `docs/liara/api-findings.md` §3.
 The tables below are a **fallback only**, for when the API is unreachable, and the product must show their capture date.
 
-Bundle (feature plan) ID mapping. **Verify in Spike B.**
+Bundle (feature plan) ID mapping. **✅ Verified in Spike B (2026-10-22)** by price: for every plan,
+`plan price×720 + bundle displayPrice` equals the console's monthly price for that bundle (e.g. `small-g2` 475,000 + `basic` 275,000 = Earth/Base 750,000).
 | Console (fa) | CLI label | `bundlePlanID` |
 |---|---|---|
-| رایگان | Free | `free` |
+| رایگان | Free | `free` (`available: false` on every g2 plan for this account) |
 | پایه | Bronze | `basic` |
 | نقره‌ای | Silver | `standard` |
 | طلایی | Gold | `pro` |
-Source: `docs/vendor/liara-cli/src/utils/set-bundle-plan-names.ts`. `enterprise` also exists (`errors/bundle-plan.ts:36`).
-`planID: free` requires `bundlePlanID: free`.
+Source: `docs/vendor/liara-cli/src/utils/set-bundle-plan-names.ts` and `v1-me.json`. `enterprise` (`errors/bundle-plan.ts:36`) is not in the live catalog.
+`planID: free` requires `bundlePlanID: free`. Always key bundles by ID: the CLI's `plan list` labels them by position, which is wrong
+for the live order `free, basic, standard, pro` (`api-findings.md` §3).
 
-## Fallback table (captured from the console 2026-10-22, may be outdated)
+Plan ID mapping. **✅ Verified in Spike B** by the same arithmetic. The legacy IDs (`ir-*`, `standard-base`, `pro`, …) are also in the
+catalog, often `available: true`; never offer them, only `*-g2` (the CLI filter).
+| Console | `planID` |
+|---|---|
+| Earth (زمین) | `small-g2` |
+| Mars (مریخ) | `medium-g2` |
+| Jupiter (مشتری) | `standard-base-g2` |
+| Saturn (زحل) | `standard-plus-g2` |
+| Uranus (اورانوس) | `pro-g2` |
+| Neptune (نپتون) | `pro-plus-g2` |
+| Pluto (پلوتون) | `pro-max-g2` |
+| — (64 GB / 32 vCPU, not in the console table) | `express-g2` |
+`mini-g2` (0.25 GB) exists but is `available: false`.
+
+What each bundle includes (live `plans.projectBundlePlans[*-g2]`, the same for every g2 plan except `backupSpace`, which grows with the plan):
+| Limit | free | basic (پایه) | standard (نقره‌ای) | pro (طلایی) |
+|---|---|---|---|---|
+| Log retention (`maxLogsRetention`, days) | 0.05 (≈1 h) | 7 | 30 | 60 |
+| Report/metrics retention (days) | 0.05 | 7 | 30 | 60 |
+| Deploys per day | 10 | 20 | 50 | unlimited |
+| Build timeout (min) | 5 | 5 | 15 | 60 |
+| Max source size (MB) | 128 | 128 | 256 | 256 |
+| Releases kept | 1 | 10 | 10 | 10 |
+| Domains | 1 | 2 | 5 | unlimited |
+| Disks per app | 1 | 2 | 5 | 10 |
+| Rollback | no | yes | yes | yes |
+| Zero-downtime deploy | no | **no** | yes | yes |
+| Custom DNS / read-only FS | no | yes | yes | yes |
+| Germany builder | no | yes | yes | yes |
+| Backups | none | none | daily + manual | hourly/daily/weekly/monthly + manual |
+| Free SSL | yes | yes | yes | yes |
+
+Product impact: on `basic`, incident evidence older than 7 days is gone, and a redeploy has downtime (no zero-downtime), so warn
+before restart/redeploy. A 128 MB source limit applies on free/basic.
+
+## Fallback table (captured from the console 2026-10-22, may be outdated; matched the live API that day)
 
 All plans are located in Iran, with unlimited (fair-use) traffic. Prices are in **toman, excluding 10% VAT**. Billing is hourly.
 The displayed price = plan resources + feature bundle (e.g. Mars plan 825,000 + gold bundle 1,475,000 = 2,300,000/month;
@@ -42,12 +79,11 @@ Monthly / hourly price by bundle:
 | Neptune | 12,600,000 / 17,499 | 16,000,000 / 22,222 | 22,000,000 / 30,555 |
 | Pluto | 22,000,000 / 30,555 | 28,000,000 / 38,888 | 38,600,000 / 53,610 |
 
-TODO (developer will supply): what each bundle includes (e.g. zero-downtime, backups; known so far: log retention and
-source-size/deploy limits per `api-findings.md`), and the DBaaS plans. Bundle IDs are in the mapping above. PaaS plan IDs
-(e.g. `free`, `*g2*` keys) come only from `GET v1/me`, so never hard-code them.
+TODO (developer will supply): the DBaaS plans (the live catalog is in `v1/me` → `plans.databases` / `databaseBundlePlans`,
+not yet read). PaaS plan IDs come only from `GET v1/me`, so never hard-code them; the mappings above are for display.
 
 Recommendation heuristic (state the reason to the user):
 - Static/small Node or demo → Earth or Mars, base bundle.
 - Next.js SSR / typical API with DB → Mars or Jupiter.
 - Observed RAM > 80% sustained → suggest one plan up, show the cost delta, tier 3.
-- Always offer the cheaper option, and explain hourly billing from credit (show the billing balance).
+- Always offer the cheaper option, and explain hourly billing from credit (show the billing balance: `team.balance` in team mode, else `user.balance`).

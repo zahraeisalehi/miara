@@ -1,0 +1,32 @@
+{
+  "request": {
+    "method": "GET",
+    "path": "/v1/projects/{app}/metrics/summary",
+    "query": {}
+  },
+  "source": "spec pass_reports_get-summary-reports-of-app.md",
+  "status": 200,
+  "durationMs": 165,
+  "capturedAt": "2026-10-22T17:50:50.831Z",
+  "body": {
+    "cpuUsage": [
+      {
+        "value": [
+          1792691450,
+          "0.00001031506243052169"
+        ],
+        "applet": "6ada273c4400f7631d4dcbba.1.12d3110e-1cc1-4512-b09b-e95f33184638-DEPLOY"
+      }
+    ],
+    "memoryUsage": [
+      {
+        "value": [
+          1792691450,
+          "24383488"
+        ],
+        "applet": "6ada273c4400f7631d4dcbba.1.12d3110e-1cc1-4512-b09b-e95f33184638-DEPLOY"
+      }
+    ],
+    "disksUsage": []
+  }
+}

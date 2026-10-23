@@ -7,9 +7,17 @@
     ".": "./src/index.ts"
   },
   "scripts": {
-    "typecheck": "tsc --noEmit -p tsconfig.json"
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "spike:llm": "tsx scripts/spike-llm.ts",
+    "spike:liara": "tsx scripts/spike-liara.ts"
   },
   "dependencies": {
     "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@ai-sdk/openai-compatible": "3.0.75",
+    "ai": "7.0.148",
+    "dotenv": "18.0.8",
+    "tsx": "4.23.15"
   }
 }

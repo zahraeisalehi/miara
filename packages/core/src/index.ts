@@ -6,5 +6,6 @@ export * as diagnosis from './diagnosis/index.js';
 export * as llm from './llm/index.js';
 export * as timeline from './timeline/index.js';
 export * as db from './db/index.js';
+export * as redact from './redact/index.js';
 
 export const CORE_PACKAGE = '@miara/core';

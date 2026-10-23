@@ -1,0 +1,96 @@
+{
+  "request": {
+    "method": "GET",
+    "path": "/v2/projects/{app}/logs",
+    "query": {
+      "start": "1792687849",
+      "direction": "forward",
+      "last_lines": "false"
+    }
+  },
+  "source": "CLI commands/app/logs.ts:227-238",
+  "status": 200,
+  "durationMs": 229,
+  "capturedAt": "2026-10-22T17:50:49.914Z",
+  "body": {
+    "data": [
+      {
+        "metaData": {
+          "releaseId": "6ada4a5f7ebf55567c84fb56"
+        },
+        "values": [
+          [
+            "1792690864394931780",
+            "{\"type\":\"stderr\",\"_entry\":\"[error] boom at 2026-10-22T17:41:04.394Z\"}"
+          ],
+          [
+            "1792690865476365730",
+            "{\"type\":\"stderr\",\"_entry\":\"[error] boom at 2026-10-22T17:41:05.476Z\"}"
+          ]
+        ]
+      },
+      {
+        "metaData": {
+          "releaseId": "6ada4a5f7ebf55567c84fb56"
+        },
+        "values": [
+          [
+            "1792690824748581121",
+            "{\"type\":\"stdout\",\"_entry\":\"\"}"
+          ],
+          [
+            "1792690824748666061",
+            "{\"type\":\"stdout\",\"_entry\":\"> liara-hello@1.0.0 start\"}"
+          ],
+          [
+            "1792690824748709275",
+            "{\"type\":\"stdout\",\"_entry\":\"> node server.js\"}"
+          ],
+          [
+            "1792690824748755279",
+            "{\"type\":\"stdout\",\"_entry\":\"\"}"
+          ],
+          [
+            "1792690824935369086",
+            "{\"type\":\"stdout\",\"_entry\":\"listening on 3000\"}"
+          ],
+          [
+            "1792690861547245926",
+            "{\"type\":\"stderr\",\"_entry\":\"[error] boom at 2026-10-22T17:41:01.541Z\"}"
+          ],
+          [
+            "1792690861816459281",
+            "{\"type\":\"stdout\",\"_entry\":\"[info] GET /favicon.ico\"}"
+          ],
+          [
+            "1792690862795472583",
+            "{\"type\":\"stderr\",\"_entry\":\"[error] boom at 2026-10-22T17:41:02.794Z\"}"
+          ],
+          [
+            "1792690863039751134",
+            "{\"type\":\"stdout\",\"_entry\":\"[info] GET /favicon.ico\"}"
+          ],
+          [
+            "1792690863602578067",
+            "{\"type\":\"stderr\",\"_entry\":\"[error] boom at 2026-10-22T17:41:03.602Z\"}"
+          ]
+        ]
+      },
+      {
+        "metaData": {
+          "releaseId": "6ada2931aa8f2ba374c10af5"
+        },
+        "values": [
+          [
+            "1792690821277768517",
+            "{\"type\":\"stdout\",\"_entry\":\"[info] GET /\"}"
+          ],
+          [
+            "1792690821435244731",
+            "{\"type\":\"stdout\",\"_entry\":\"[info] GET /favicon.ico\"}"
+          ]
+        ]
+      }
+    ]
+  }
+}

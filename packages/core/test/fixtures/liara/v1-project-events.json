@@ -1,0 +1,71 @@
+{
+  "request": {
+    "method": "GET",
+    "path": "/v1/projects/{app}/events",
+    "query": {}
+  },
+  "source": "spec pass_apps_get-events-of-the-app.md",
+  "status": 200,
+  "durationMs": 578,
+  "capturedAt": "2026-10-22T17:50:50.494Z",
+  "body": {
+    "data": [
+      {
+        "id": "75f723af83c68f3fd6deba17a38bbad4614d6781a122a9040ee5604b7c8bfc48",
+        "status": "die",
+        "action": "die",
+        "time": "1792690837",
+        "release": "6ada2931aa8f2ba374c10af5",
+        "tag": "v1"
+      },
+      {
+        "id": "75f723af83c68f3fd6deba17a38bbad4614d6781a122a9040ee5604b7c8bfc48",
+        "status": "stop",
+        "action": "stop",
+        "time": "1792690837",
+        "release": "6ada2931aa8f2ba374c10af5",
+        "tag": "v1"
+      },
+      {
+        "id": "75f723af83c68f3fd6deba17a38bbad4614d6781a122a9040ee5604b7c8bfc48",
+        "status": "kill",
+        "action": "kill",
+        "time": "1792690836",
+        "release": "6ada2931aa8f2ba374c10af5",
+        "tag": "v1"
+      },
+      {
+        "id": "d5db19ab329617f740de6f7d41e00cf8e0f1e2fda9d4b39ad50da83dbeb8d9b3",
+        "status": "start",
+        "action": "start",
+        "time": "1792690824",
+        "release": "6ada4a5f7ebf55567c84fb56",
+        "tag": "v2"
+      },
+      {
+        "id": "d5db19ab329617f740de6f7d41e00cf8e0f1e2fda9d4b39ad50da83dbeb8d9b3",
+        "status": "create",
+        "action": "create",
+        "time": "1792690822",
+        "release": "6ada4a5f7ebf55567c84fb56",
+        "tag": "v2"
+      },
+      {
+        "id": "75f723af83c68f3fd6deba17a38bbad4614d6781a122a9040ee5604b7c8bfc48",
+        "status": "start",
+        "action": "start",
+        "time": "1792682365",
+        "release": "6ada2931aa8f2ba374c10af5",
+        "tag": "v1"
+      },
+      {
+        "id": "75f723af83c68f3fd6deba17a38bbad4614d6781a122a9040ee5604b7c8bfc48",
+        "status": "create",
+        "action": "create",
+        "time": "1792682364",
+        "release": "6ada2931aa8f2ba374c10af5",
+        "tag": "v1"
+      }
+    ]
+  }
+}

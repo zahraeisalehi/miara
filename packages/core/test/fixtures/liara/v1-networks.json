@@ -1,0 +1,29 @@
+{
+  "request": {
+    "method": "GET",
+    "path": "/v1/networks",
+    "query": {}
+  },
+  "source": "CLI commands/network/list.ts:22",
+  "status": 200,
+  "durationMs": 96,
+  "capturedAt": "2026-10-22T17:50:49.150Z",
+  "body": {
+    "networks": [
+      {
+        "_id": "6ada37c87ebf55567c805a43",
+        "name": "wallexer-net",
+        "createdAt": "2026-10-22T16:20:24.761Z",
+        "projectCount": 1,
+        "databaseCount": 0
+      },
+      {
+        "_id": "6ad9efc312fe5042a6a082da",
+        "name": "backend-net",
+        "createdAt": "2026-10-22T11:13:07.009Z",
+        "projectCount": 1,
+        "databaseCount": 0
+      }
+    ]
+  }
+}

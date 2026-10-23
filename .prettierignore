@@ -5,3 +5,4 @@ docs/vendor/
 **/.next/
 coverage/
 *.md
+packages/core/test/fixtures/
