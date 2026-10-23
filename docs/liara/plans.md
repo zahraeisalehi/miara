@@ -82,8 +82,9 @@ Monthly / hourly price by bundle:
 TODO (developer will supply): the DBaaS plans (the live catalog is in `v1/me` → `plans.databases` / `databaseBundlePlans`,
 not yet read). PaaS plan IDs come only from `GET v1/me`, so never hard-code them; the mappings above are for display.
 
-Recommendation heuristic (state the reason to the user):
-- Static/small Node or demo → Earth or Mars, base bundle.
+Recommendation heuristic (state the reason to the user). Default bundle is **standard** (D18): basic has no zero-downtime
+and only 7-day logs, and Miara says so when the user picks basic.
+- Static/small Node or demo → Earth or Mars, standard bundle (offer basic as the cheaper option, with the D18 caveats).
 - Next.js SSR / typical API with DB → Mars or Jupiter.
 - Observed RAM > 80% sustained → suggest one plan up, show the cost delta, tier 3.
 - Always offer the cheaper option, and explain hourly billing from credit (show the billing balance: `team.balance` in team mode, else `user.balance`).

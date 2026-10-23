@@ -45,6 +45,8 @@ client must append `teamID` to every call**, the same way. Details are in `api-f
 - **Settings**: zero-downtime, default subdomain, static IP, read-only, envs (set/unset; this restarts the app).
 - **Disks**: list/create/resize/delete, backups (create/list/download), FTP.
 - **Domains** (PaaS): check, list, create, attach to app, redirect, SSL on/off, delete. See `domains.md`.
+  The list call `GET v1/domains?project={app}` (spec `pass_domains_get-all-domains.md`, CLI `commands/deploy.ts:246`) is used by
+  `set_env` to decide its tier (D19); ⏸ not called live yet (the `LIVE=1` test is the first live call).
 - **Reports**: summary, CPU, memory (✅ for apps: values are strings, one series per container `applet`, 30 s step), network rx/tx (apps and DBs).
 - **DBaaS**: create (`hostname, type, planID, version, publicNetwork`; types mysql, postgres, mongodb, redis,
   mariadb), list, get (connection info), delete, power, resize, settings, public-network toggle, backups, reports, events.

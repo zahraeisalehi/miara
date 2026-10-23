@@ -1,0 +1,117 @@
+{
+  "source": "recorded live by scripts/record-llm.ts",
+  "capturedAt": "2026-10-23T05:18:20.234Z",
+  "request": {
+    "model": "gpt-5.4-mini",
+    "reasoning_effort": "low",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Reply with exactly: OK"
+      }
+    ]
+  },
+  "status": 200,
+  "body": {
+    "choices": [
+      {
+        "content_filter_results": {
+          "hate": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "protected_material_code": {
+            "detected": false,
+            "filtered": false
+          },
+          "protected_material_text": {
+            "detected": false,
+            "filtered": false
+          },
+          "self_harm": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "sexual": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "violence": {
+            "filtered": false,
+            "severity": "safe"
+          }
+        },
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "annotations": [],
+          "content": "OK",
+          "refusal": null,
+          "role": "assistant"
+        },
+        "native_finish_reason": "stop"
+      }
+    ],
+    "created": 1792732699,
+    "id": "gen-chatcmpl-Ec1xTDdMz83QG4GCtygrsvdIhqN7Z",
+    "model": "gpt-5.4-mini",
+    "object": "chat.completion",
+    "prompt_filter_results": [
+      {
+        "prompt_index": 0,
+        "content_filter_results": {
+          "hate": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "jailbreak": {
+            "detected": false,
+            "filtered": false
+          },
+          "self_harm": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "sexual": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "violence": {
+            "filtered": false,
+            "severity": "safe"
+          }
+        }
+      }
+    ],
+    "routing": {
+      "serving_pipereplica": "d20261022090208-4d2530fd-default-r1-dp0-default"
+    },
+    "service_tier": "default",
+    "system_fingerprint": null,
+    "usage": {
+      "completion_tokens": "[REDACTED]",
+      "completion_tokens_details": "[REDACTED]",
+      "latency_checkpoint": {
+        "engine_tbt_ms": 4,
+        "engine_ttft_ms": 33,
+        "engine_ttlt_ms": 91,
+        "pre_inference_ms": 99,
+        "service_tbt_ms": 4,
+        "service_ttft_ms": 253,
+        "service_ttlt_ms": 306,
+        "user_visible_ttft_ms": 154
+      },
+      "prompt_tokens": "[REDACTED]",
+      "prompt_tokens_details": "[REDACTED]",
+      "total_tokens": "[REDACTED]",
+      "cost": 0.0000612375,
+      "is_byok": false,
+      "cost_details": {
+        "upstream_inference_cost": 0.0000612375
+      }
+    },
+    "native_model": "gpt-5.4-mini-2026-03-17",
+    "cost": 0.0000612375
+  }
+}

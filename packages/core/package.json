@@ -9,15 +9,20 @@
   "scripts": {
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "spike:llm": "tsx scripts/spike-llm.ts",
-    "spike:liara": "tsx scripts/spike-liara.ts"
+    "spike:liara": "tsx scripts/spike-liara.ts",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate"
   },
   "dependencies": {
+    "drizzle-orm": "0.45.4",
+    "postgres": "3.4.9",
     "zod": "4.6.7"
   },
   "devDependencies": {
     "@ai-sdk/openai-compatible": "3.0.75",
     "ai": "7.0.148",
     "dotenv": "18.0.8",
+    "drizzle-kit": "0.31.11",
     "tsx": "4.23.15"
   }
 }

@@ -14,7 +14,8 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "spike:llm": "pnpm --filter @miara/core spike:llm",
-    "spike:liara": "pnpm --filter @miara/core spike:liara"
+    "spike:liara": "pnpm --filter @miara/core spike:liara",
+    "db:migrate": "pnpm --filter @miara/core db:migrate"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",

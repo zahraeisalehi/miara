@@ -1,12 +1,19 @@
-// Guards every committed Liara fixture: no credentials, no personal data, no env values.
-import { readdirSync, readFileSync } from 'node:fs';
+// Guards every committed Liara and LLM fixture: no credentials, no personal data, no env values.
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
 import { REDACTED } from '../../../src/redact/index.js';
 
 const DIR = import.meta.dirname;
-const files = readdirSync(DIR).filter((f) => f.endsWith('.json'));
+const LLM_DIR = resolve(DIR, '../llm');
+const files = [
+  ...readdirSync(DIR).filter((f) => f.endsWith('.json')).map((f) => `${DIR}/${f}`),
+  ...(existsSync(LLM_DIR)
+    ? readdirSync(LLM_DIR).filter((f) => f.endsWith('.json')).map((f) => `${LLM_DIR}/${f}`)
+    : []),
+];
 
 const JWT = /eyJ[\w-]+\.[\w-]+\.[\w-]+/;
 const BEARER = /Bearer\s+(?!\[REDACTED)/i;
@@ -32,8 +39,8 @@ describe('Liara fixtures are redacted', () => {
   });
 
   for (const file of files) {
-    it(file, () => {
-      const text = readFileSync(`${DIR}/${file}`, 'utf8');
+    it(file.slice(DIR.length - 'liara'.length), () => {
+      const text = readFileSync(file, 'utf8');
       expect(text).not.toMatch(JWT);
       expect(text).not.toMatch(BEARER);
       expect(text).not.toMatch(EMAIL);

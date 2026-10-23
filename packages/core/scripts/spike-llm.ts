@@ -1,4 +1,5 @@
 // Spike A (docs/PHASES.md Phase 1): what BoxAPI actually supports. Run: pnpm spike:llm
+// `pnpm spike:llm --record` instead records the redacted fixtures for the LLM adapter tests (scripts/record-llm.ts).
 // Never sends `tools` (BoxAPI has no tool calling). Never prints headers or keys.
 import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
 import { streamText } from 'ai';
@@ -7,6 +8,7 @@ import { z } from 'zod';
 import { redactString } from '../src/redact/index.js';
 
 import { loadSpikeEnv, percentile } from './_env.js';
+import { recordLlmFixtures } from './record-llm.js';
 
 const BASE_URL = 'https://ai.boxapi.ir/ai/v1';
 const TIMEOUT_MS = 60_000;
@@ -328,6 +330,10 @@ async function latency(): Promise<void> {
 }
 
 async function main(): Promise<void> {
+  if (process.argv.includes('--record')) {
+    await recordLlmFixtures();
+    return;
+  }
   console.log(`BoxAPI spike, model=${MODEL}, base=${BASE_URL}`);
   await probeReasoningEffort();
   await plainChat();

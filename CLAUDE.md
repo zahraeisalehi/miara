@@ -53,6 +53,6 @@ intelligence/troubleshooting (100), UX (50), stability & operational security (5
 
 ## Commands
 - `pnpm install` · `pnpm dev` · `pnpm test` · `pnpm lint` · `pnpm typecheck`
-- Local DB: `docker compose -p miara up -d db` (Postgres on host port **5433**)
-- Live spikes (developer runs them; read-only, secrets from `.env.local`): `pnpm spike:llm` · `pnpm spike:liara <app>`
+- Local DB: `docker compose -p miara up -d db` (Postgres on host port **5433**) · migrations: `pnpm db:migrate`
+- Live spikes (developer runs them; read-only, secrets from `.env.local`): `pnpm spike:llm` (`--record` writes LLM test fixtures) · `pnpm spike:liara <app>` · live read tests: `LIVE=1 pnpm test`
 - Liara CLI source (gitignored): `bash scripts/vendor-liara-cli.sh` clones it at the pinned commit into `docs/vendor/liara-cli`

@@ -1,0 +1,156 @@
+{
+  "source": "recorded live by scripts/record-llm.ts",
+  "capturedAt": "2026-10-23T05:18:24.935Z",
+  "request": {
+    "model": "gpt-5.4-mini",
+    "reasoning_effort": "low",
+    "messages": [
+      {
+        "role": "system",
+        "content": "You are the intent router of a deployment assistant. Answer only with JSON matching the schema."
+      },
+      {
+        "role": "user",
+        "content": "اپ miara-demo رو ری‌استارت کن"
+      }
+    ],
+    "response_format": {
+      "type": "json_schema",
+      "json_schema": {
+        "name": "router",
+        "strict": true,
+        "schema": {
+          "type": "object",
+          "properties": {
+            "intent": {
+              "type": "string",
+              "enum": [
+                "deploy",
+                "status",
+                "logs",
+                "diagnose",
+                "restart",
+                "start_stop",
+                "smalltalk"
+              ]
+            },
+            "appName": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "intent",
+            "appName"
+          ],
+          "additionalProperties": false
+        }
+      }
+    }
+  },
+  "status": 200,
+  "body": {
+    "choices": [
+      {
+        "content_filter_results": {
+          "hate": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "protected_material_code": {
+            "detected": false,
+            "filtered": false
+          },
+          "protected_material_text": {
+            "detected": false,
+            "filtered": false
+          },
+          "self_harm": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "sexual": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "violence": {
+            "filtered": false,
+            "severity": "safe"
+          }
+        },
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "annotations": [],
+          "content": "{\"intent\":\"restart\",\"appName\":\"miara-demo\"}",
+          "refusal": null,
+          "role": "assistant"
+        },
+        "native_finish_reason": "stop"
+      }
+    ],
+    "created": 1792732704,
+    "id": "gen-chatcmpl-Ec1xYPZq7Iq2yMMDKfIv2wXZNwzGu",
+    "model": "gpt-5.4-mini",
+    "object": "chat.completion",
+    "prompt_filter_results": [
+      {
+        "prompt_index": 0,
+        "content_filter_results": {
+          "hate": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "jailbreak": {
+            "detected": false,
+            "filtered": false
+          },
+          "self_harm": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "sexual": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "violence": {
+            "filtered": false,
+            "severity": "safe"
+          }
+        }
+      }
+    ],
+    "routing": {
+      "serving_pipereplica": "d20261022090208-4d2530fd-default-r2-dp0-default"
+    },
+    "service_tier": "default",
+    "system_fingerprint": null,
+    "usage": {
+      "completion_tokens": "[REDACTED]",
+      "completion_tokens_details": "[REDACTED]",
+      "latency_checkpoint": {
+        "engine_tbt_ms": 5,
+        "engine_ttft_ms": 33,
+        "engine_ttlt_ms": 239,
+        "pre_inference_ms": 93,
+        "service_tbt_ms": 5,
+        "service_ttft_ms": 320,
+        "service_ttlt_ms": 509,
+        "user_visible_ttft_ms": 226
+      },
+      "prompt_tokens": "[REDACTED]",
+      "prompt_tokens_details": "[REDACTED]",
+      "total_tokens": "[REDACTED]",
+      "cost": 0.00020355,
+      "is_byok": false,
+      "cost_details": {
+        "upstream_inference_cost": 0.00020355
+      }
+    },
+    "native_model": "gpt-5.4-mini-2026-03-17",
+    "cost": 0.00020355
+  }
+}

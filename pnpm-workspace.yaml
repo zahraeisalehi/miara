@@ -2,3 +2,7 @@ packages:
   - packages/*
   - apps/*
   - examples/*
+
+# esbuild (via tsx, drizzle-kit) ships its binary as an optional dependency; its postinstall is not needed.
+allowBuilds:
+  esbuild: false

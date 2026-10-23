@@ -41,16 +41,27 @@ Fallback: every intent is also reachable from quick-action chips and buttons, so
 In the MCP path the coding agent (Claude Code, Cursor) does its own reasoning and tool calling. Miara's MCP tools
 are the same core tools with the same policy gate.
 
-## Risk tiers
+## Risk tiers (D19)
+Human-in-the-loop means the human approves only the few risky decisions. Routine operations run autonomously and
+every one is visible on the timeline.
 | Tier | Examples | Behaviour |
 |---|---|---|
 | 0 Read | list apps, logs, metrics, events, billing, releases | auto |
-| 1 Safe-write | create backup, set env on non-prod app | auto + timeline |
-| 2 Impactful | restart, deploy, start/stop, env on prod, domain/SSL | approval card |
-| 3 Destructive/costly | delete app/db/disk, change plan, resize | approval + typed confirmation + cost shown |
+| 1 Routine write | restart, deploy, set env, power on (later: rollback, backup, add domain, enable SSL) | auto + timeline, behind a circuit breaker |
+| 2 Impactful | power off; set env when the app has a custom domain; any tier-1 call over the breaker limit | approval card |
+| 3 Destructive/costly | create app, change plan, any delete | approval + typed confirmation + cost shown |
 
-Approval token: bound to `sha256(tool + canonical(args))`, single-use, expiring (default 10 min), and stored in the DB.
-Approval in MCP: the tool returns `pending_approval` with a web link, and MCP elicitation is used if the client supports it.
+- **Per-call tier**: a tool may define `tierFor(args, ctx)`. The gate uses max(static tier, computed tier, breaker escalation),
+  and a failing `tierFor` counts as tier 2.
+- **Circuit breaker**: per app, over a rolling hour, at most 2 auto restarts and 3 auto deploys, counted from timeline events.
+  The next call escalates to tier 2 with a Persian + English reason.
+- **Approval token**: `propose` stores it bound to `sha256(tool + canonical(args))`, single-use, expiring (default 10 min), in the DB.
+  A human `approve`s it (web card or MCP elicitation), which sets `approved_at`; the tier-3 typed confirmation is checked here.
+  `approve` is never a tool and is never callable by the LLM. `execute` then consumes the token in one atomic UPDATE that requires
+  it to be approved, unused and unexpired, with a matching hash.
+- **Approval in MCP**: the tool returns `pending_approval` with a web link, and MCP elicitation is used if the client supports it.
+- **Unknown outcomes**: a write that times out after it was sent is reported as "result unclear" (never a plain failure),
+  and the tool re-reads the app state.
 
 ## Deploy workflow (core/workflows/deploy)
 detect platform → recommend plan (plans.md) → ensure network → create app (tier 3: costs money) → generate

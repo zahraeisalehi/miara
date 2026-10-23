@@ -246,3 +246,30 @@ export const MetricSeriesResponse = z.looseObject({
   end: z.number(),
   result: z.array(z.looseObject({ values: z.array(Sample), applet: z.string() })),
 });
+
+// ---- Domains (spec pass_domains_get-all-domains.md; CLI commands/deploy.ts:246). source: spec (unverified, no fixture yet).
+
+export const Domain = z.looseObject({
+  _id: z.string(),
+  name: z.string(),
+  type: z.string().optional(),
+  project: z
+    .looseObject({ _id: z.string().optional(), project_id: z.string().optional() })
+    .nullish(),
+  status: z.string().optional(),
+  certificatesStatus: z.string().optional(),
+});
+
+/** GET /v1/domains?project={app} */
+export const DomainsResponse = z.looseObject({ domains: z.array(Domain) });
+
+// ---- Write responses. No live write has run yet (Phase 1b is mocks only), so these stay as loose as the specs.
+
+/** Restart, scale, update-envs, resize, create app: the specs document only a status (and maybe `message`). */
+export const WriteAck = z.unknown();
+
+/** POST /v2/projects/{app}/sources (spec pass_deploy_deploy-sources-code.md; CLI services/upload.ts:6-8) */
+export const SourceUploadResponse = z.looseObject({ sourceID: z.string() });
+
+/** POST /v2/projects/{app}/releases (spec pass_deploy_deploy-releases.md; CLI types/created-release.ts) */
+export const CreatedReleaseResponse = z.looseObject({ releaseID: z.string() });
