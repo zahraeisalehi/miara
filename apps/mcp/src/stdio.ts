@@ -1,6 +1,7 @@
 // Entry point for coding agents (.mcp.json): `node --import tsx apps/mcp/src/stdio.ts`.
 // stdout is the protocol channel: nothing but JSON-RPC may be written there. Logs go to stderr.
-import { createMiaraCore, redact } from '@miara/core';
+import { createMiaraCore, db, redact } from '@miara/core';
+import type { MiaraCore } from '@miara/core';
 import { serveStdio } from '@modelcontextprotocol/server/stdio';
 
 import { createApprovalCodec } from './approval.js';
@@ -37,6 +38,19 @@ function main() {
   process.on('SIGINT', () => void shutdown());
   process.on('SIGTERM', () => void shutdown());
   log(`ready (${core.registry.list().length} core tools + run_approved)`);
+  void probeDatabase(core);
+}
+
+/** Warns on stderr at startup if Miara's own database is down; the server keeps running either way. */
+async function probeDatabase(core: MiaraCore) {
+  try {
+    await db.pingDb(core.db);
+  } catch (err) {
+    const problem = db.dbProblemMessage(err);
+    log(
+      `database check failed at startup: ${problem?.en ?? 'unexpected error (see tool results)'}`,
+    );
+  }
 }
 
 main();

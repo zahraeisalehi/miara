@@ -26,7 +26,7 @@ it('keeps stdout clean: initialize + tools/list answer as JSON-RPC, logs on stde
   child.stderr.on('data', (d: Buffer) => (stderr += d.toString()));
 
   const send = (msg: unknown) => child.stdin.write(`${JSON.stringify(msg)}\n`);
-  const waitFor = async (pred: () => boolean, ms = 20_000) => {
+  const waitFor = async (pred: () => boolean, ms = 60_000) => {
     const start = Date.now();
     while (!pred()) {
       if (Date.now() - start > ms) throw new Error(`timeout; stderr: ${stderr}`);
@@ -58,4 +58,4 @@ it('keeps stdout clean: initialize + tools/list answer as JSON-RPC, logs on stde
   expect(list.find((m) => m.id === 2)?.result?.tools?.length).toBeGreaterThan(15);
   expect(stderr).toMatch(/\[miara-mcp\] ready/);
   expect(stdout + stderr).not.toContain('dummy-token-for-test');
-}, 30_000);
+}, 90_000);

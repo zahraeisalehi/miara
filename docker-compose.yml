@@ -4,6 +4,8 @@ name: miara
 services:
   db:
     image: postgres:16-alpine
+    # Comes back after crashes and Docker/host restarts; only `docker compose stop` keeps it down.
+    restart: unless-stopped
     environment:
       # Dev-only credentials; must match DATABASE_URL in .env.example.
       POSTGRES_USER: miara

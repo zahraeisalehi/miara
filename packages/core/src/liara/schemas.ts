@@ -269,10 +269,17 @@ export const Domain = z.looseObject({
 /** GET /v1/domains?project={app} */
 export const DomainsResponse = z.looseObject({ domains: z.array(Domain) });
 
-// ---- Write responses. No live write has run yet (Phase 1b is mocks only), so these stay as loose as the specs.
+// ---- Write responses. Each stays as loose as its spec until a live call shows the real shape.
 
-/** Restart, scale, update-envs, resize, create app: the specs document only a status (and maybe `message`). */
+/** Scale, update-envs, resize, create app: the specs document only a status (and maybe `message`). Not observed live yet. */
 export const WriteAck = z.unknown();
+
+/**
+ * POST /v1/projects/{app}/actions/restart. ✅ Live (2026-10-23, fixture write-v1-projects-app-actions-restart.json):
+ * a 2xx with an empty body, parsed as null (spec pass_apps_to-restart-a-app.md: 200, no content). Miara reads no
+ * field from it, so an object body is also accepted; anything else is a shape change worth surfacing.
+ */
+export const RestartAck = z.union([z.null(), z.looseObject({})]);
 
 /** POST /v2/projects/{app}/sources (spec pass_deploy_deploy-sources-code.md; CLI services/upload.ts:6-8) */
 export const SourceUploadResponse = z.looseObject({ sourceID: z.string() });

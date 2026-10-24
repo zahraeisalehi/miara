@@ -4,3 +4,4 @@ export * from './hash.js';
 export * from './store.js';
 export * from './breaker.js';
 export * from './gate.js';
+export * from './scope.js';

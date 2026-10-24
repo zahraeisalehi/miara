@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { TEST_APP } from '@miara/core/testing';
+import type { policy } from '@miara/core';
+import { syntheticV2Logs, TEST_APP } from '@miara/core/testing';
 
 import { connect } from './harness.js';
 
@@ -66,10 +67,21 @@ describe('tier 0 and 1', () => {
     const h = await connect();
     const text = h.textOf(await h.call('get_logs', { app: TEST_APP }));
     const lines = text.split('\n');
-    expect(lines[0]).toMatch(/log lines \(v2\) for miara-something, last \d+ shown, newest last/);
+    expect(lines[0]).toMatch(/^\d+ newest log lines \(v2\) for miara-something, newest last$/);
     const stamps = lines.slice(1).map((l) => l.split(' ')[0] ?? '');
     expect([...stamps].sort()).toEqual(stamps);
     expect(lines.length - 1).toBeLessThanOrEqual(100);
+  });
+
+  it('get_logs over a window larger than the cap shows the NEWEST 100', async () => {
+    const logs = syntheticV2Logs({ count: 1000, stepMs: 3_000, endMs: Date.now() - 1_000 });
+    const h = await connect({ routes: { [`GET /v2/projects/${TEST_APP}/logs`]: logs.route } });
+    const text = h.textOf(await h.call('get_logs', { app: TEST_APP, sinceMinutes: 60 }));
+    const lines = text.split('\n');
+    expect(lines[0]).toMatch(/^100 newest log lines/);
+    expect(lines).toHaveLength(101);
+    expect(lines.at(-1)).toMatch(new RegExp(`${logs.message(999)}$`));
+    expect(lines[1]).toMatch(new RegExp(`${logs.message(900)}$`));
   });
 
   it('restart_app runs automatically with exactly one Liara write', async () => {
@@ -239,5 +251,38 @@ describe('errors', () => {
     expect(text).toMatch(/^error liara:not_found/);
     expect(text).toMatch(/fa: پیدا نشد/);
     expect(text).not.toMatch(/\n\s+at /);
+  });
+
+  it("Miara's own database being down comes back as a plain fa/en message with the fix", async () => {
+    const refused = () =>
+      Promise.reject(
+        new Error('Failed query: select … postgres://miara:miara@localhost:5433/miara', {
+          cause: new AggregateError(
+            [
+              Object.assign(new Error('connect ECONNREFUSED 127.0.0.1:5433'), {
+                code: 'ECONNREFUSED',
+              }),
+            ],
+            '',
+          ),
+        }),
+      );
+    const store: policy.ApprovalStore = {
+      insert: refused,
+      get: refused,
+      approve: refused,
+      consume: refused,
+      clearArgs: refused,
+      listPending: refused,
+    };
+    const h = await connect({ store });
+    const r = await h.call('run_approved', { approvalId: '00000000-0000-4000-8000-000000000000' });
+    expect(r.isError).toBe(true);
+    const text = h.textOf(r);
+    expect(text).toMatch(/^error db_unavailable:/);
+    expect(text).toContain('docker compose -p miara up -d db');
+    expect(text).toMatch(/\nfa: /);
+    expect(text).not.toMatch(/postgres:\/\/|ECONNREFUSED/);
+    expect(h.logs.join('\n')).toMatch(/database problem/);
   });
 });

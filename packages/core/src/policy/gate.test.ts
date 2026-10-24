@@ -71,7 +71,7 @@ describe('per-call tier (D19)', () => {
     const r = await gate.propose(
       'create_app',
       {
-        name: 'new-app',
+        name: 'buggy-new-app',
         platform: 'node',
         planID: 'small-g2',
         bundlePlanID: 'standard',
@@ -81,7 +81,7 @@ describe('per-call tier (D19)', () => {
     );
     expect(r.kind === 'pending_approval' && r.approval).toMatchObject({
       tier: 3,
-      confirmationHint: 'new-app',
+      confirmationHint: 'buggy-new-app',
       costPreview: { next: { planID: 'small-g2', bundlePlanID: 'standard' } },
     });
   });
@@ -89,7 +89,7 @@ describe('per-call tier (D19)', () => {
   it('create_app requires networkId and an existing network', async () => {
     const { gate } = makeGate(createMemoryApprovalStore());
     const base = {
-      name: 'new-app',
+      name: 'buggy-new-app',
       platform: 'node',
       planID: 'small-g2',
       bundlePlanID: 'standard',
@@ -143,7 +143,7 @@ describe('tier-1 circuit breaker', () => {
       'pending_approval',
     );
     // Other apps have their own budget.
-    expect((await gate.propose('restart_app', { app: 'other' }, { actor: 'worker' })).kind).toBe(
+    expect((await gate.propose('restart_app', { app: 'miara-other' }, { actor: 'worker' })).kind).toBe(
       'result',
     );
 
@@ -237,14 +237,14 @@ describe('approve is never a tool', () => {
     const { gate } = makeGate(createMemoryApprovalStore());
     for (const info of gate.registry.list()) {
       expect(Object.keys(info).sort()).toEqual(
-        ['description', 'dynamicTier', 'inputSchema', 'name', 'sensitive', 'tier'].sort(),
+        ['description', 'dynamicTier', 'inputSchema', 'name', 'sensitive', 'targetsApp', 'tier'].sort(),
       );
     }
     expect(gate.registry.get('set_env')?.sensitive).toEqual(['set']);
     expect(gate.registry.get('restart_app')).toMatchObject({ tier: 1, dynamicTier: true });
   });
 
-  it('tool handlers get only liara, incidents + clock, never the gate', async () => {
+  it('tool handlers get only liara, incidents, scope + clock, never the gate', async () => {
     const seen: string[] = [];
     const { writeTools } = await import('../tools/write.js');
     const restart = writeTools.find((t) => t.name === 'restart_app');
@@ -260,7 +260,7 @@ describe('approve is never a tool', () => {
     } finally {
       restart.handler = original;
     }
-    expect(seen.sort()).toEqual(['incidents', 'liara', 'now']);
+    expect(seen.sort()).toEqual(['incidents', 'liara', 'now', 'scope']);
   });
 
   it('invalid input is refused before anything runs', async () => {

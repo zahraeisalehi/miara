@@ -6,7 +6,7 @@ import { createInterface } from 'node:readline/promises';
 import type { Readable, Writable } from 'node:stream';
 import { pathToFileURL } from 'node:url';
 
-import { createMiaraCore, policy } from '@miara/core';
+import { createMiaraCore, db, policy } from '@miara/core';
 
 import { EnvError, loadCoreConfig } from './env.js';
 
@@ -139,6 +139,11 @@ async function main() {
       isTTY: Boolean(process.stdin.isTTY && process.stdout.isTTY),
     });
     process.exitCode = code;
+  } catch (e) {
+    const problem = db.dbProblemMessage(e);
+    if (!problem) throw e;
+    process.stderr.write(`${problem.en}\n${problem.fa}\n`);
+    process.exitCode = 1;
   } finally {
     await core.close();
   }

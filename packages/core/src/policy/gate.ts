@@ -83,6 +83,11 @@ export function createPolicyGate(opts: GateOptions): PolicyGate {
     return def;
   }
 
+  /** D21: refuse any app outside MIARA_APP_SCOPE before a single Liara call (prepare and tierFor read Liara). */
+  function assertInScope(app: string | null | undefined) {
+    if (app && !ctx.scope.allows(app)) throw new PolicyError('out_of_scope', { app });
+  }
+
   async function parseAndPrepare(def: AnyToolDef, rawArgs: unknown): Promise<unknown> {
     const parsed = def.input.safeParse(rawArgs ?? {});
     if (!parsed.success) {
@@ -91,6 +96,7 @@ export function createPolicyGate(opts: GateOptions): PolicyGate {
         parsed.error.issues.map((i) => ({ path: i.path.join('.'), message: i.message })),
       );
     }
+    assertInScope(def.appOf?.(parsed.data));
     return def.prepare ? def.prepare(parsed.data, ctx) : parsed.data;
   }
 
@@ -258,6 +264,9 @@ export function createPolicyGate(opts: GateOptions): PolicyGate {
       if (!row) throw new PolicyError('not_found');
       if (row.args === null) throw new PolicyError('used');
       const def = toolOf(row.tool);
+      // The scope may have shrunk since the proposal.
+      assertInScope(row.app);
+      assertInScope(def.appOf?.(row.args));
 
       // The stored args must still hash to what was approved (DB tampering).
       const stored = argsHash(row.tool, row.args);

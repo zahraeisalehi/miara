@@ -120,7 +120,7 @@ export function gateSuite(name: string, harness: () => StoreHarness) {
       const { gate, writes } = makeGate(h.store);
       const id = await pendingId(gate, 'set_app_power', { app: APP, on: false });
       await gate.approve(id, { approver: 'web-user' });
-      await h.tamper(id, { app: 'someone-else', on: false });
+      await h.tamper(id, { app: 'miara-someone-else', on: false });
       await expect(gate.execute(id, { actor: 'web' })).rejects.toMatchObject({ kind: 'tampered' });
       expect(writes()).toHaveLength(0);
     });
@@ -130,7 +130,7 @@ export function gateSuite(name: string, harness: () => StoreHarness) {
       const id = await pendingId(gate, 'set_app_power', { app: APP, on: false });
       await gate.approve(id, { approver: 'mcp-elicitation' });
       await expect(
-        gate.execute(id, { actor: 'mcp', args: { app: 'someone-else', on: false } }),
+        gate.execute(id, { actor: 'mcp', args: { app: 'miara-someone-else', on: false } }),
       ).rejects.toMatchObject({ kind: 'tampered' });
       await gate.execute(id, { actor: 'mcp', args: { on: false, app: APP } });
       expect(writes()).toHaveLength(1);

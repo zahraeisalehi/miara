@@ -8,7 +8,8 @@ export type PolicyErrorKind =
   | 'expired'
   | 'tampered'
   | 'wrong_confirmation'
-  | 'invalid_approver';
+  | 'invalid_approver'
+  | 'out_of_scope';
 
 const MESSAGES: Record<PolicyErrorKind, { fa: string; en: string }> = {
   unknown_tool: { fa: 'چنین ابزاری وجود ندارد.', en: 'No such tool.' },
@@ -36,6 +37,10 @@ const MESSAGES: Record<PolicyErrorKind, { fa: string; en: string }> = {
     en: 'Wrong confirmation text. Type the exact app name.',
   },
   invalid_approver: { fa: 'تأییدکننده‌ی نامعتبر.', en: 'Invalid approver.' },
+  out_of_scope: {
+    fa: 'این اپ خارج از محدوده‌ی میاراست؛ میارا آن را نمی‌بیند و به آن دست نمی‌زند.',
+    en: "This app is outside Miara's scope (MIARA_APP_SCOPE); Miara can't see or change it.",
+  },
 };
 
 export class PolicyError extends Error {

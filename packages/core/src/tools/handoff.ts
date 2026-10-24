@@ -13,7 +13,8 @@ export const handoffTools: AnyToolDef[] = [
     },
     tier: 0,
     input: z.object({}),
-    handler: (_args, { incidents }) => incidents.listOpen(),
+    handler: async (_args, { incidents, scope }) =>
+      (await incidents.listOpen()).filter((i) => scope.allows(i.app)),
   }),
   defineTool({
     name: 'report_fix',

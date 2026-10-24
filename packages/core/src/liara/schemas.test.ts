@@ -18,6 +18,7 @@ import {
   ProjectsResponse,
   ReleaseResponse,
   ReleasesResponse,
+  RestartAck,
   V1LogsResponse,
   V2LogEntry,
   V2LogsResponse,
@@ -46,6 +47,7 @@ const SCHEMA_BY_PATH: Record<string, z.ZodType> = {
   '/v1/releases/{id}': ReleaseResponse,
   '/v2/releases/{id}/build-logs': BuildLogsResponse,
   '/v1/domains': DomainsResponse,
+  '/v1/projects/{app}/actions/restart': RestartAck,
 };
 
 interface Fixture {
@@ -115,5 +117,14 @@ describe('Liara response schemas parse the recorded fixtures', () => {
 
   it('rejects a body missing a required field', () => {
     expect(ProjectsResponse.safeParse({ projects: [{ name: 'x' }] }).success).toBe(false);
+  });
+});
+
+describe('RestartAck (observed live 2026-10-23)', () => {
+  it('accepts the observed empty body and an object, rejects other shapes', () => {
+    expect(RestartAck.safeParse(fixtureBody('write-v1-projects-app-actions-restart')).success).toBe(true);
+    expect(RestartAck.safeParse({ message: 'ok' }).success).toBe(true);
+    expect(RestartAck.safeParse('restarted').success).toBe(false);
+    expect(RestartAck.safeParse([1]).success).toBe(false);
   });
 });

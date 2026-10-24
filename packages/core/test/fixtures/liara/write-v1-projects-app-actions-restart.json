@@ -1,0 +1,12 @@
+{
+  "request": {
+    "method": "POST",
+    "path": "/v1/projects/{app}/actions/restart",
+    "query": {}
+  },
+  "source": "spec pass_apps_to-restart-a-app.md; live restart via MCP, timeline operation 62f06464-5a5e-4de4-850f-4f55edbfe9cc",
+  "status": 200,
+  "note": "Observed: a 2xx with an EMPTY body (the client parses it as null). The exact status code was not recorded; the spec documents 200 with no content.",
+  "capturedAt": "2026-10-23T15:42:45.994Z",
+  "body": null
+}

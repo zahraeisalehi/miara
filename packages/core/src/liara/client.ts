@@ -21,6 +21,7 @@ import {
   SourceUploadResponse,
   V1LogsResponse,
   V2LogsResponse,
+  RestartAck,
   WriteAck,
 } from './schemas.js';
 
@@ -169,7 +170,7 @@ export function createLiaraClient(opts: LiaraClientOptions) {
       post(
         `/v1/projects/${enc(app)}/actions/restart`,
         '/v1/projects/{app}/actions/restart',
-        WriteAck,
+        RestartAck,
       ),
 
     /** 1 = on, 0 = off. spec pass_apps_turn-on-or-off-a-app.md; CLI commands/app/start.ts:27, stop.ts:27 */

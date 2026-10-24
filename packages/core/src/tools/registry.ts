@@ -13,6 +13,8 @@ export interface ToolInfo {
   dynamicTier: boolean;
   inputSchema: unknown;
   sensitive: readonly string[];
+  /** Targets one app (`appOf`), so the gate checks it against MIARA_APP_SCOPE (D21). */
+  targetsApp: boolean;
 }
 
 export interface ToolRegistry {
@@ -32,6 +34,7 @@ export function createToolRegistry(defs: readonly AnyToolDef[]): ToolRegistry {
       dynamicTier: Boolean(d.tierFor || d.breaker),
       inputSchema: z.toJSONSchema(d.input, { io: 'input', unrepresentable: 'any' }),
       sensitive: d.sensitive ?? [],
+      targetsApp: Boolean(d.appOf),
     });
   });
   const byName = new Map(infos.map((i) => [i.name, i]));

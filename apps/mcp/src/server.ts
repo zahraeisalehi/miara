@@ -2,7 +2,7 @@
 // Tier 0–1 run now; tier ≥ 2 ask the human via elicitation when the client supports it, else return
 // `pending_approval` with the terminal fallback. `run_approved` only executes what a human already approved.
 import type { tools } from '@miara/core';
-import { policy, redact } from '@miara/core';
+import { db, policy, redact } from '@miara/core';
 import {
   CLIENT_CAPABILITIES_META_KEY,
   fromJsonSchema,
@@ -108,6 +108,9 @@ export function createMiaraMcpServer(core: McpCore, opts: MiaraMcpOptions = {}):
     if (!explained) {
       const message = err instanceof Error ? `${err.name}: ${err.message}` : String(err);
       log(`[miara-mcp] unexpected error: ${redact.redactString(message, secrets)}`);
+    } else {
+      const dbProblem = db.dbProblemMessage(err);
+      if (dbProblem) log(`[miara-mcp] database problem: ${dbProblem.en}`);
     }
     return result;
   }

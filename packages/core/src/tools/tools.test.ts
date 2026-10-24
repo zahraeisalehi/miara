@@ -13,8 +13,8 @@ const ARGS: Record<string, unknown> = {
   get_logs: { app: APP },
   get_events: { app: APP },
   list_releases: { app: APP },
-  get_release: { releaseId: '6ada4a5f7ebf55567c84fb56' },
-  get_build_logs: { releaseId: '6ada4a5f7ebf55567c84fb56' },
+  get_release: { app: APP, releaseId: '6ada4a5f7ebf55567c84fb56' },
+  get_build_logs: { app: APP, releaseId: '6ada4a5f7ebf55567c84fb56' },
   get_metrics_summary: { app: APP },
   get_metrics: { app: APP, kind: 'cpu' },
   get_billing: {},
@@ -43,7 +43,7 @@ describe('read tools on fixtures', () => {
     expect(r.kind === 'result' && r.result).toMatchObject({
       source: 'v2',
       total: 14,
-      truncated: false,
+      complete: true,
     });
   });
 

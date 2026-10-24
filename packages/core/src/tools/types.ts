@@ -3,6 +3,7 @@
 import type { z } from 'zod';
 
 import type { LiaraClient } from '../liara/client.js';
+import type { AppScope } from '../policy/scope.js';
 
 /** An incident as the handoff tools see it (db/incidents.ts reads the `incidents` table). */
 export interface Incident {
@@ -26,6 +27,8 @@ export type Tier = 0 | 1 | 2 | 3;
 export interface ToolContext {
   liara: LiaraClient;
   incidents: IncidentReader;
+  /** D21: the apps Miara may see or touch. The gate enforces it for `appOf`; list tools filter with it. */
+  scope: AppScope;
   now: () => Date;
 }
 

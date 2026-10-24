@@ -4,11 +4,31 @@ import { z } from 'zod';
 import { getLogs } from '../liara/logs.js';
 import { offerablePlans, recommendBundle, VAT_RATE } from '../liara/plans.js';
 
-import { defineTool } from './types.js';
-import type { AnyToolDef } from './types.js';
+import { defineTool, ToolInputError } from './types.js';
+import type { AnyToolDef, ToolContext } from './types.js';
 
 const App = z.object({ app: z.string().min(1).describe('Liara app name (project_id)') });
 const MAX_LOG_LINES = 300;
+/** How far back a release ID is accepted for an app (newest first). */
+const RELEASE_LOOKBACK = 50;
+
+/**
+ * A release record doesn't name its app (v1-release.json), so a bare release ID could reach an app outside the
+ * scope (D21). Accept it only when it is among the app's recent releases.
+ */
+async function releaseOfApp<A extends { app: string; releaseId: string }>(
+  args: A,
+  { liara }: ToolContext,
+): Promise<A> {
+  const { releases } = await liara.listReleases(args.app, 1, RELEASE_LOOKBACK);
+  if (!releases.some((r) => r._id === args.releaseId)) {
+    throw new ToolInputError(
+      `این استقرار در ${RELEASE_LOOKBACK} استقرار اخیر اپ «${args.app}» نیست.`,
+      `Release ${args.releaseId} is not among the last ${RELEASE_LOOKBACK} releases of ${args.app}.`,
+    );
+  }
+  return args;
+}
 
 export const readTools: AnyToolDef[] = [
   defineTool({
@@ -16,7 +36,9 @@ export const readTools: AnyToolDef[] = [
     description: { fa: 'فهرست اپ‌های لیارا', en: 'List Liara apps' },
     tier: 0,
     input: z.object({}),
-    handler: async (_args, { liara }) => (await liara.listApps()).projects,
+    // D21: apps outside MIARA_APP_SCOPE are invisible.
+    handler: async (_args, { liara, scope }) =>
+      (await liara.listApps()).projects.filter((p) => scope.allows(p.project_id)),
   }),
   defineTool({
     name: 'get_app',
@@ -44,13 +66,12 @@ export const readTools: AnyToolDef[] = [
     appOf: (a) => a.app,
     async handler({ app, sinceMinutes }, { liara, now }) {
       const since = Math.floor(now().getTime() / 1000) - sinceMinutes * 60;
-      const { source, lines } = await getLogs(liara, app, since);
-      return {
-        source,
-        total: lines.length,
-        truncated: lines.length > MAX_LOG_LINES,
-        lines: lines.slice(-MAX_LOG_LINES),
-      };
+      // The newest lines of the window, oldest first (getLogs follows v2 pages to the tail).
+      const { source, lines, complete } = await getLogs(liara, app, since, {
+        maxLines: MAX_LOG_LINES,
+        now,
+      });
+      return { source, total: lines.length, complete, lines };
     },
   }),
   defineTool({
@@ -79,14 +100,18 @@ export const readTools: AnyToolDef[] = [
     name: 'get_release',
     description: { fa: 'وضعیت یک استقرار', en: 'Release status' },
     tier: 0,
-    input: z.object({ releaseId: z.string().min(1) }),
+    input: App.extend({ releaseId: z.string().min(1) }),
+    appOf: (a) => a.app,
+    prepare: releaseOfApp,
     handler: async ({ releaseId }, { liara }) => (await liara.getRelease(releaseId)).release,
   }),
   defineTool({
     name: 'get_build_logs',
     description: { fa: 'لاگ ساخت یک استقرار', en: 'Build logs of a release' },
     tier: 0,
-    input: z.object({ releaseId: z.string().min(1), since: z.string().optional() }),
+    input: App.extend({ releaseId: z.string().min(1), since: z.string().optional() }),
+    appOf: (a) => a.app,
+    prepare: releaseOfApp,
     handler: ({ releaseId, since }, { liara }) => liara.getBuildLogs(releaseId, since),
   }),
   defineTool({

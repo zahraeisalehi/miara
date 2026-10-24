@@ -1,6 +1,6 @@
 // Agent-friendly tool results: one summary line, then compact JSON (or log lines). Everything here is already
 // redacted by core's gate; this module only shapes and caps it. Never a stack trace.
-import { liara, llm, policy, tools } from '@miara/core';
+import { db, liara, llm, policy, tools } from '@miara/core';
 import type { CallToolResult } from '@modelcontextprotocol/server';
 
 export const MAX_LOG_LINES = 100;
@@ -30,7 +30,7 @@ export function capArrays(value: unknown, depth = 0): unknown {
 
 interface LogsLike {
   source: string;
-  total: number;
+  complete?: boolean;
   lines: { ts: number; stream: string; message: string }[];
 }
 
@@ -54,7 +54,11 @@ export function summaryLine(tool: string, tier: Tier, args: unknown, result: unk
   if (tool === 'list_apps') return appsSummary(result);
   if (isLogs(result)) {
     const shown = Math.min(result.lines.length, MAX_LOG_LINES);
-    return `${result.total} log lines (${result.source})${app ? ` for ${app}` : ''}, last ${shown} shown, newest last`;
+    const gap =
+      result.complete === false
+        ? ' (busy window: older pages skipped, the newest minutes are complete)'
+        : '';
+    return `${shown} newest log lines (${result.source})${app ? ` for ${app}` : ''}, newest last${gap}`;
   }
   if (Array.isArray(result)) return `${tool}${app ? ` ${app}` : ''}: ${result.length} items`;
   if (tier === 0) return `${tool}${app ? ` ${app}` : ''}: ok`;
@@ -156,6 +160,21 @@ function explain(err: unknown): Explained | undefined {
       kind: 'unknown_plan',
       messageFa: 'این پلن یا بسته در فهرست لیارا نیست. از list_plans استفاده کنید.',
       messageEn: `${err.message}. Use list_plans for valid IDs.`,
+    };
+  }
+  // Never the raw driver error: it can carry the DATABASE_URL.
+  if (db.isDbUnavailable(err)) {
+    return {
+      kind: 'db_unavailable',
+      messageFa: db.DB_UNAVAILABLE_MESSAGE.fa,
+      messageEn: db.DB_UNAVAILABLE_MESSAGE.en,
+    };
+  }
+  if (db.isDbNotMigrated(err)) {
+    return {
+      kind: 'db_not_migrated',
+      messageFa: db.DB_NOT_MIGRATED_MESSAGE.fa,
+      messageEn: db.DB_NOT_MIGRATED_MESSAGE.en,
     };
   }
   return undefined;
