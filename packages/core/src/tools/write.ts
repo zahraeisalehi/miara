@@ -9,6 +9,7 @@ import { BUNDLE_IDS, lookup, offerablePlans, priceFor } from '../liara/plans.js'
 
 import { defineTool, ToolInputError } from './types.js';
 import type { AnyToolDef, CostPreview, ToolContext } from './types.js';
+import { HealthPath, verifyAppHealthy, verifySince } from './verify.js';
 
 const AppName = z.string().min(1).describe('Liara app name (project_id)');
 const EnvKey = z.string().regex(/^[A-Za-z_][A-Za-z0-9_]*$/, 'env key: letters, digits, underscore');
@@ -117,10 +118,19 @@ export const writeTools: AnyToolDef[] = [
     description: { fa: 'ری‌استارت اپ', en: 'Restart the app' },
     tier: 1,
     breaker: 'restart',
-    input: z.object({ app: AppName }),
+    input: z.object({ app: AppName, healthPath: HealthPath }),
     appOf: (a) => a.app,
     reconcile: ({ app }, ctx) => appState(app, ctx),
-    handler: ({ app }, { liara }) => liara.restartApp(app),
+    // Success only after the verify step: a new container is up and the public address answers.
+    async handler({ app, healthPath }, ctx) {
+      const since = verifySince(ctx);
+      const ack = await ctx.liara.restartApp(app);
+      const verify = await verifyAppHealthy(app, since, ctx, {
+        healthPath,
+        what: { fa: 'ری‌استارت', en: 'The restart' },
+      });
+      return { app, ack, verify };
+    },
   }),
   defineTool({
     name: 'set_app_power',

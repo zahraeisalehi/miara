@@ -3,8 +3,10 @@ import { z } from 'zod';
 
 import { getLogs } from '../liara/logs.js';
 import { offerablePlans, recommendBundle, VAT_RATE } from '../liara/plans.js';
+import { ProbeInputError } from '../probe/index.js';
 
 import { defineTool, ToolInputError } from './types.js';
+import { HealthPath } from './verify.js';
 import type { AnyToolDef, ToolContext } from './types.js';
 
 const App = z.object({ app: z.string().min(1).describe('Liara app name (project_id)') });
@@ -66,12 +68,41 @@ export const readTools: AnyToolDef[] = [
     appOf: (a) => a.app,
     async handler({ app, sinceMinutes }, { liara, now }) {
       const since = Math.floor(now().getTime() / 1000) - sinceMinutes * 60;
-      // The newest lines of the window, oldest first (getLogs follows v2 pages to the tail).
+      // getLogs follows v2 pages to the tail and returns the newest lines oldest first; agents and the evidence
+      // pack read the most recent lines first, so they come back newest first.
       const { source, lines, complete } = await getLogs(liara, app, since, {
         maxLines: MAX_LOG_LINES,
         now,
       });
-      return { source, total: lines.length, complete, lines };
+      return {
+        source,
+        total: lines.length,
+        complete,
+        order: 'newest_first' as const,
+        lines: [...lines].reverse(),
+      };
+    },
+  }),
+  defineTool({
+    name: 'check_health',
+    description: {
+      fa: 'بررسی پاسخ‌دهی آدرس عمومی اپ (HTTP)',
+      en: "HTTP probe of the app's public https://<app>.liara.run address",
+    },
+    tier: 0,
+    input: App.extend({
+      path: HealthPath,
+    }),
+    appOf: (a) => a.app,
+    async handler({ app, path }, { probe }) {
+      try {
+        return await probe(app, path);
+      } catch (err) {
+        if (err instanceof ProbeInputError) {
+          throw new ToolInputError('نام اپ یا مسیر برای بررسی معتبر نیست.', err.message);
+        }
+        throw err;
+      }
     },
   }),
   defineTool({

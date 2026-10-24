@@ -11,6 +11,7 @@ const ARGS: Record<string, unknown> = {
   list_apps: {},
   get_app: { app: APP },
   get_logs: { app: APP },
+  check_health: { app: APP },
   get_events: { app: APP },
   list_releases: { app: APP },
   get_release: { app: APP, releaseId: '6ada4a5f7ebf55567c84fb56' },
@@ -37,14 +38,26 @@ describe('read tools on fixtures', () => {
     });
   }
 
-  it('get_logs returns sorted v2 lines', async () => {
+  it('get_logs returns v2 lines newest first', async () => {
     const { gate } = makeGate(createMemoryApprovalStore());
     const r = await gate.propose('get_logs', { app: APP }, { actor: 'mcp' });
     expect(r.kind === 'result' && r.result).toMatchObject({
       source: 'v2',
       total: 14,
       complete: true,
+      order: 'newest_first',
     });
+    const ts =
+      r.kind === 'result' ? (r.result as { lines: { ts: number }[] }).lines.map((l) => l.ts) : [];
+    expect(ts.length).toBeGreaterThan(1);
+    expect([...ts].sort((a, b) => b - a)).toEqual(ts);
+  });
+
+  it('check_health refuses a path that is not a plain path', async () => {
+    const { gate } = makeGate(createMemoryApprovalStore());
+    await expect(
+      gate.propose('check_health', { app: APP, path: '//evil.example/x' }, { actor: 'mcp' }),
+    ).rejects.toMatchObject({ kind: 'invalid_args' });
   });
 
   it('list_plans prices bundles and recommends standard', async () => {

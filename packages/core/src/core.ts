@@ -10,6 +10,7 @@ import { createLiaraClient } from './liara/client.js';
 import { createOpenAICompatibleProvider } from './llm/openai-compatible.js';
 import { createPolicyGate } from './policy/gate.js';
 import { parseAppScope } from './policy/scope.js';
+import { createHttpProbe } from './probe/index.js';
 import { createTimeline } from './timeline/operation.js';
 import { handoffTools } from './tools/handoff.js';
 import { readTools } from './tools/read.js';
@@ -30,7 +31,14 @@ export function createMiaraCore(config: CoreConfig) {
     tools: [...readTools, ...writeTools, ...handoffTools],
     store: createPgApprovalStore(database.db),
     timeline,
-    ctx: { liara, incidents: createPgIncidentReader(database.db), scope, now },
+    ctx: {
+      liara,
+      incidents: createPgIncidentReader(database.db),
+      scope,
+      now,
+      probe: createHttpProbe(),
+      sleep: (ms) => new Promise((r) => setTimeout(r, ms)),
+    },
     secrets,
   });
   const llm = createOpenAICompatibleProvider({

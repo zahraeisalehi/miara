@@ -2,6 +2,8 @@
 
 const NON_SECRET_ENV_KEYS = new Set(['LLM_PROVIDER', 'BOXAPI_MODEL', 'WEB_PORT']);
 const MIN_SECRET_LENGTH = 8;
+/** App env keys whose values are shown (still string-redacted); every other app env value is masked. */
+export const VISIBLE_APP_ENV_KEYS: ReadonlySet<string> = new Set(['PORT', 'NODE_ENV', 'TZ']);
 
 // `token(?!s)`: credentials (`token`, `apiToken`, `access_token`) yes; LLM usage counts (`prompt_tokens`,
 // `completion_tokens_details`, `max_tokens`) no. Redacting those destroyed the first recorded LLM fixtures.
@@ -50,7 +52,13 @@ export function redactDeep(value: unknown, secrets: readonly string[], parentKey
     if (/^envs?$/i.test(parentKey)) {
       return value.map((item) =>
         isEnvEntry(item)
-          ? { ...(redactDeep(item, secrets) as object), value: REDACTED }
+          ? {
+              ...(redactDeep(item, secrets) as object),
+              value:
+                typeof item.key === 'string' && VISIBLE_APP_ENV_KEYS.has(item.key)
+                  ? redactDeep(item.value, secrets)
+                  : REDACTED,
+            }
           : redactDeep(item, secrets),
       );
     }

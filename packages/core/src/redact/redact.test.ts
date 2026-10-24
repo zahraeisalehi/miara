@@ -112,6 +112,32 @@ describe('redactDeep', () => {
     expect(out).toEqual({ project: { envs: [{ key: 'DATABASE_URL', value: REDACTED }] } });
   });
 
+  it('shows only allowlisted env values (PORT, NODE_ENV, TZ), still string-redacted', () => {
+    const out = redactDeep(
+      {
+        envs: [
+          { key: 'PORT', value: '3000' },
+          { key: 'NODE_ENV', value: 'production' },
+          { key: 'TZ', value: 'Asia/Tehran' },
+          { key: 'port', value: '1' },
+          { key: 'API_KEY', value: 'k' },
+          { key: 'TZ_SECRET', value: 'x' },
+        ],
+      },
+      ['production'],
+    );
+    expect(out).toEqual({
+      envs: [
+        { key: 'PORT', value: '3000' },
+        { key: 'NODE_ENV', value: '[REDACTED:ENV]' },
+        { key: 'TZ', value: 'Asia/Tehran' },
+        { key: 'port', value: REDACTED },
+        { key: 'API_KEY', value: REDACTED },
+        { key: 'TZ_SECRET', value: REDACTED },
+      ],
+    });
+  });
+
   it('scrubs secrets inside arbitrary strings, e.g. log lines', () => {
     const out = redactDeep({ data: [{ message: `connecting with ${TOKEN}` }] }, [TOKEN]);
     expect(JSON.stringify(out)).not.toContain(TOKEN);

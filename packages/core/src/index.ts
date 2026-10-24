@@ -7,6 +7,7 @@ export * as llm from './llm/index.js';
 export * as timeline from './timeline/index.js';
 export * as db from './db/index.js';
 export * as redact from './redact/index.js';
+export * as probe from './probe/index.js';
 export { configFromEnv, CoreConfig } from './config.js';
 export { createMiaraCore } from './core.js';
 export type { MiaraCore } from './core.js';

@@ -122,7 +122,9 @@ describe('Liara response schemas parse the recorded fixtures', () => {
 
 describe('RestartAck (observed live 2026-10-23)', () => {
   it('accepts the observed empty body and an object, rejects other shapes', () => {
-    expect(RestartAck.safeParse(fixtureBody('write-v1-projects-app-actions-restart')).success).toBe(true);
+    expect(RestartAck.safeParse(fixtureBody('write-v1-projects-app-actions-restart')).success).toBe(
+      true,
+    );
     expect(RestartAck.safeParse({ message: 'ok' }).success).toBe(true);
     expect(RestartAck.safeParse('restarted').success).toBe(false);
     expect(RestartAck.safeParse([1]).success).toBe(false);

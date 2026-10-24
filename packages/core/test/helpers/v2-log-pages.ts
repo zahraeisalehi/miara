@@ -30,7 +30,10 @@ export function syntheticV2Logs(opts: {
         JSON.stringify({ type: 'stdout', _entry: message(i) }),
       ]);
     }
-    return { status: 200, body: { data: values.length ? [{ metaData: { releaseId: 'r1' }, values }] : [] } };
+    return {
+      status: 200,
+      body: { data: values.length ? [{ metaData: { releaseId: 'r1' }, values }] : [] },
+    };
   };
   return { route, first: firstMs, last: tsOf(opts.count - 1), message };
 }

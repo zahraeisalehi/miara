@@ -1,6 +1,7 @@
 // Agent-friendly tool results: one summary line, then compact JSON (or log lines). Everything here is already
 // redacted by core's gate; this module only shapes and caps it. Never a stack trace.
 import { db, liara, llm, policy, tools } from '@miara/core';
+import type { probe } from '@miara/core';
 import type { CallToolResult } from '@modelcontextprotocol/server';
 
 export const MAX_LOG_LINES = 100;
@@ -38,6 +39,24 @@ function isLogs(v: unknown): v is LogsLike {
   return typeof v === 'object' && v !== null && 'lines' in v && Array.isArray(v.lines);
 }
 
+function isProbe(v: unknown): v is probe.ProbeResult {
+  return typeof v === 'object' && v !== null && 'reachable' in v && 'messageEn' in v;
+}
+
+function isVerified(
+  v: unknown,
+): v is { verify: { httpChecked: boolean; http: probe.ProbeResult } } {
+  return (
+    typeof v === 'object' &&
+    v !== null &&
+    'verify' in v &&
+    typeof v.verify === 'object' &&
+    v.verify !== null &&
+    'http' in v.verify &&
+    isProbe(v.verify.http)
+  );
+}
+
 function appsSummary(result: unknown): string {
   if (!Array.isArray(result)) return 'apps';
   const items = result.map((a: Record<string, unknown>) => {
@@ -52,13 +71,22 @@ export function summaryLine(tool: string, tier: Tier, args: unknown, result: unk
   const app =
     typeof args === 'object' && args !== null && 'app' in args ? String(args.app) : undefined;
   if (tool === 'list_apps') return appsSummary(result);
+  if (tool === 'check_health' && isProbe(result))
+    return `check_health ${app ?? ''}: ${result.messageEn}`;
+  if (isVerified(result)) {
+    const v = result.verify;
+    const http = v.httpChecked
+      ? `public address ${v.http.messageEn}`
+      : `public address not checked: ${v.http.messageEn}`;
+    return `${tool}${app ? ` ${app}` : ''}: done and verified (tier ${tier}, auto): container up, ${http}`;
+  }
   if (isLogs(result)) {
     const shown = Math.min(result.lines.length, MAX_LOG_LINES);
     const gap =
       result.complete === false
         ? ' (busy window: older pages skipped, the newest minutes are complete)'
         : '';
-    return `${shown} newest log lines (${result.source})${app ? ` for ${app}` : ''}, newest last${gap}`;
+    return `${shown} newest log lines (${result.source})${app ? ` for ${app}` : ''}, newest first${gap}`;
   }
   if (Array.isArray(result)) return `${tool}${app ? ` ${app}` : ''}: ${result.length} items`;
   if (tier === 0) return `${tool}${app ? ` ${app}` : ''}: ok`;
@@ -73,8 +101,9 @@ export function formatResult(
 ): CallToolResult {
   const head = summaryLine(tool, tier, args, result);
   if (isLogs(result)) {
+    // Core returns them newest first: the cap keeps the newest.
     const lines = result.lines
-      .slice(-MAX_LOG_LINES)
+      .slice(0, MAX_LOG_LINES)
       .map(
         (l) =>
           `${new Date(l.ts).toISOString()} ${l.stream} ${truncate(l.message.replace(/\n/g, '\\n'), MAX_LINE_CHARS)}`,
@@ -148,6 +177,9 @@ function explain(err: unknown): Explained | undefined {
       messageEn: err.messageEn,
       detail: `${err.endpoint} → ${err.status}`,
     };
+  }
+  if (err instanceof tools.VerifyError) {
+    return { kind: 'verify_failed', messageFa: err.messageFa, messageEn: err.messageEn };
   }
   if (err instanceof tools.ToolInputError) {
     return { kind: 'input', messageFa: err.messageFa, messageEn: err.messageEn };

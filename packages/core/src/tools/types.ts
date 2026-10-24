@@ -3,6 +3,7 @@
 import type { z } from 'zod';
 
 import type { LiaraClient } from '../liara/client.js';
+import type { HttpProbe } from '../probe/index.js';
 import type { AppScope } from '../policy/scope.js';
 
 /** An incident as the handoff tools see it (db/incidents.ts reads the `incidents` table). */
@@ -30,6 +31,10 @@ export interface ToolContext {
   /** D21: the apps Miara may see or touch. The gate enforces it for `appOf`; list tools filter with it. */
   scope: AppScope;
   now: () => Date;
+  /** GET https://<app>.liara.run<path> (probe/index.ts). */
+  probe: HttpProbe;
+  /** Waits between verify polls (instant in tests). */
+  sleep: (ms: number) => Promise<void>;
 }
 
 export interface CostPreview {
@@ -85,5 +90,19 @@ export class ToolInputError extends Error {
     this.name = 'ToolInputError';
     this.messageFa = messageFa;
     this.messageEn = messageEn;
+  }
+}
+
+/** A corrective action ran, but its verify step did not confirm the app is healthy. `raw` holds the last checks. */
+export class VerifyError extends Error {
+  readonly messageFa: string;
+  readonly messageEn: string;
+  readonly raw: unknown;
+  constructor(messageFa: string, messageEn: string, raw: unknown) {
+    super(messageEn);
+    this.name = 'VerifyError';
+    this.messageFa = messageFa;
+    this.messageEn = messageEn;
+    this.raw = raw;
   }
 }

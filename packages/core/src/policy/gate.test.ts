@@ -113,11 +113,8 @@ describe('per-call tier (D19)', () => {
 describe('tier-1 circuit breaker', () => {
   it(`escalates the restart after ${AUTO_RESTARTS_PER_HOUR} automatic ones, and resets after the window`, async () => {
     const c = clock();
-    const { gate, writes } = makeGate(
-      createMemoryApprovalStore(c.now),
-      { 'POST /v1/projects/other/actions/restart': { status: 200, body: {} } },
-      c.now,
-    );
+    // The test core answers restarts of miara-other (in scope) with a fresh container start, so verify passes.
+    const { gate, writes } = makeGate(createMemoryApprovalStore(c.now), {}, c.now);
     for (let i = 0; i < AUTO_RESTARTS_PER_HOUR; i += 1) {
       expect((await gate.propose('restart_app', { app: APP }, { actor: 'worker' })).kind).toBe(
         'result',
@@ -143,9 +140,9 @@ describe('tier-1 circuit breaker', () => {
       'pending_approval',
     );
     // Other apps have their own budget.
-    expect((await gate.propose('restart_app', { app: 'miara-other' }, { actor: 'worker' })).kind).toBe(
-      'result',
-    );
+    expect(
+      (await gate.propose('restart_app', { app: 'miara-other' }, { actor: 'worker' })).kind,
+    ).toBe('result');
 
     c.advance(BREAKER_WINDOW_MS);
     expect((await gate.propose('restart_app', { app: APP }, { actor: 'worker' })).kind).toBe(
@@ -237,14 +234,22 @@ describe('approve is never a tool', () => {
     const { gate } = makeGate(createMemoryApprovalStore());
     for (const info of gate.registry.list()) {
       expect(Object.keys(info).sort()).toEqual(
-        ['description', 'dynamicTier', 'inputSchema', 'name', 'sensitive', 'targetsApp', 'tier'].sort(),
+        [
+          'description',
+          'dynamicTier',
+          'inputSchema',
+          'name',
+          'sensitive',
+          'targetsApp',
+          'tier',
+        ].sort(),
       );
     }
     expect(gate.registry.get('set_env')?.sensitive).toEqual(['set']);
     expect(gate.registry.get('restart_app')).toMatchObject({ tier: 1, dynamicTier: true });
   });
 
-  it('tool handlers get only liara, incidents, scope + clock, never the gate', async () => {
+  it('tool handlers get only liara, incidents, scope, clock, probe + sleep, never the gate', async () => {
     const seen: string[] = [];
     const { writeTools } = await import('../tools/write.js');
     const restart = writeTools.find((t) => t.name === 'restart_app');
@@ -260,7 +265,7 @@ describe('approve is never a tool', () => {
     } finally {
       restart.handler = original;
     }
-    expect(seen.sort()).toEqual(['incidents', 'liara', 'now', 'scope']);
+    expect(seen.sort()).toEqual(['incidents', 'liara', 'now', 'probe', 'scope', 'sleep']);
   });
 
   it('invalid input is refused before anything runs', async () => {

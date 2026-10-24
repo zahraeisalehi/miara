@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { policy } from '@miara/core';
-import { syntheticV2Logs, TEST_APP } from '@miara/core/testing';
+import { probeAnswer, syntheticV2Logs, TEST_APP } from '@miara/core/testing';
 
 import { connect } from './harness.js';
 
@@ -59,17 +59,19 @@ describe('tier 0 and 1', () => {
     const h = await connect();
     const text = h.textOf(await h.call('list_apps'));
     const [head, json] = text.split('\n');
-    expect(head).toMatch(/^2 apps: .*miara-something \(ACTIVE, small-g2\/basic\)/);
-    expect(JSON.parse(json ?? '')).toHaveLength(2);
+    // The fixtures also hold wallexer, which is outside the test scope (miara-*,buggy-*) and must stay invisible.
+    expect(head).toMatch(/^1 app: miara-something \(ACTIVE, small-g2\/basic\)/);
+    expect(head).not.toContain('wallexer');
+    expect(JSON.parse(json ?? '')).toHaveLength(1);
   });
 
-  it('get_logs is capped, newest last, one line each', async () => {
+  it('get_logs is capped, newest first, one line each', async () => {
     const h = await connect();
     const text = h.textOf(await h.call('get_logs', { app: TEST_APP }));
     const lines = text.split('\n');
-    expect(lines[0]).toMatch(/^\d+ newest log lines \(v2\) for miara-something, newest last$/);
+    expect(lines[0]).toMatch(/^\d+ newest log lines \(v2\) for miara-something, newest first$/);
     const stamps = lines.slice(1).map((l) => l.split(' ')[0] ?? '');
-    expect([...stamps].sort()).toEqual(stamps);
+    expect([...stamps].sort().reverse()).toEqual(stamps);
     expect(lines.length - 1).toBeLessThanOrEqual(100);
   });
 
@@ -80,16 +82,35 @@ describe('tier 0 and 1', () => {
     const lines = text.split('\n');
     expect(lines[0]).toMatch(/^100 newest log lines/);
     expect(lines).toHaveLength(101);
-    expect(lines.at(-1)).toMatch(new RegExp(`${logs.message(999)}$`));
-    expect(lines[1]).toMatch(new RegExp(`${logs.message(900)}$`));
+    expect(lines[1]).toMatch(new RegExp(`${logs.message(999)}$`));
+    expect(lines.at(-1)).toMatch(new RegExp(`${logs.message(900)}$`));
   });
 
-  it('restart_app runs automatically with exactly one Liara write', async () => {
+  it('restart_app runs automatically with exactly one Liara write, and reports the verify', async () => {
     const h = await connect();
     const r = await h.call('restart_app', { app: TEST_APP });
     expect(r.isError).toBeFalsy();
-    expect(h.textOf(r)).toMatch(/^restart_app miara-something: done \(tier 1, auto\)/);
+    expect(h.textOf(r)).toMatch(
+      /^restart_app miara-something: done and verified \(tier 1, auto\): container up, public address HTTP 200/,
+    );
     expect(h.core.writes()).toHaveLength(1);
+  });
+
+  it('a restart that does not come back healthy is an error, not a success', async () => {
+    const h = await connect({ probe: async () => probeAnswer(502, 'Bad Gateway') });
+    const r = await h.call('restart_app', { app: TEST_APP });
+    expect(r.isError).toBe(true);
+    expect(h.textOf(r)).toMatch(
+      /^error verify_failed: The restart was sent, but miara-something did not/,
+    );
+    expect(h.textOf(r)).toMatch(/\nfa: /);
+    expect(h.core.writes()).toHaveLength(1);
+  });
+
+  it('check_health answers with one plain line', async () => {
+    const h = await connect();
+    const text = h.textOf(await h.call('check_health', { app: TEST_APP }));
+    expect(text).toMatch(/^check_health miara-something: HTTP 200/);
   });
 });
 
@@ -212,11 +233,23 @@ describe('requestState integrity (modern, manual client)', () => {
     const { h, state } = await firstRound();
     const r = await retry(h, {
       name: 'set_app_power',
-      arguments: { app: 'wallexer', on: false },
+      arguments: { app: 'miara-other', on: false },
       inputResponses: answer,
       requestState: state,
     });
     expect(h.textOf(r)).toMatch(/policy:tampered/);
+    expect(h.core.writes()).toHaveLength(0);
+  });
+
+  it('a valid state replayed on an app outside the scope is refused as out_of_scope', async () => {
+    const { h, state } = await firstRound();
+    const r = await retry(h, {
+      name: 'set_app_power',
+      arguments: { app: 'wallexer', on: false },
+      inputResponses: answer,
+      requestState: state,
+    });
+    expect(h.textOf(r)).toMatch(/policy:out_of_scope/);
     expect(h.core.writes()).toHaveLength(0);
   });
 
@@ -243,14 +276,22 @@ describe('errors', () => {
 
   it('a Liara 404 comes back as fa/en text', async () => {
     const h = await connect({
-      routes: { 'GET /v1/projects/nope': { status: 404, body: { message: 'not found' } } },
+      routes: { 'GET /v1/projects/miara-nope': { status: 404, body: { message: 'not found' } } },
     });
-    const r = await h.call('get_app', { app: 'nope' });
+    const r = await h.call('get_app', { app: 'miara-nope' });
     expect(r.isError).toBe(true);
     const text = h.textOf(r);
     expect(text).toMatch(/^error liara:not_found/);
     expect(text).toMatch(/fa: پیدا نشد/);
     expect(text).not.toMatch(/\n\s+at /);
+  });
+
+  it('an app outside the scope is refused before any Liara call', async () => {
+    const h = await connect();
+    const r = await h.call('get_app', { app: 'nope' });
+    expect(r.isError).toBe(true);
+    expect(h.textOf(r)).toMatch(/^error policy:out_of_scope/);
+    expect(h.core.calls).toHaveLength(0);
   });
 
   it("Miara's own database being down comes back as a plain fa/en message with the fix", async () => {

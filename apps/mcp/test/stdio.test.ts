@@ -13,7 +13,7 @@ it('keeps stdout clean: initialize + tools/list answer as JSON-RPC, logs on stde
   const envFile = join(dir, 'env');
   writeFileSync(
     envFile,
-    'LIARA_API_TOKEN=dummy-token-for-test\nBOXAPI_API_KEY=dummy-key\nBOXAPI_MODEL=test-model\nDATABASE_URL=postgres://x:y@127.0.0.1:1/none\n',
+    'LIARA_API_TOKEN=dummy-token-for-test\nBOXAPI_API_KEY=dummy-key\nBOXAPI_MODEL=test-model\nMIARA_APP_SCOPE=miara-*\nDATABASE_URL=postgres://x:y@127.0.0.1:1/none\n',
   );
   const child = spawn(process.execPath, ['--import', 'tsx', 'apps/mcp/src/stdio.ts'], {
     cwd: ROOT,

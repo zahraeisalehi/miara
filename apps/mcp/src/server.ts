@@ -50,7 +50,7 @@ export const INSTRUCTIONS = [
   '`pnpm miara approve <id>` in their own terminal, and you then call run_approved. Never run `pnpm miara approve`',
   'yourself and never ask the user to paste a confirmation to you.',
   'Never invent Liara endpoints, plan IDs or bundle IDs: get them from list_plans and list_networks.',
-  'After any corrective action, verify it with get_app, get_events and get_logs, and report the outcome.',
+  'After any corrective action, verify it with get_app, get_events, get_logs and check_health, and report the outcome.',
   'Lines starting with "fa:" are Persian text for the user; the rest is for you.',
 ].join('\n');
 
